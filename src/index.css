@@ -1,0 +1,153 @@
+@import 'tailwindcss';
+
+:root {
+  --atlas-bg: #070b14;
+  --atlas-surface: #0c1220;
+  --atlas-panel: #101827;
+  --atlas-border: #1c2a3d;
+  --atlas-muted: #8b9bb4;
+  --atlas-text: #e8eef8;
+  --atlas-threat: #f5a524;
+  --atlas-vuln: #ff5c6a;
+  --atlas-guard: #2dd4bf;
+  --atlas-accent: #38bdf8;
+  --atlas-critical: #ff3b4e;
+  --atlas-high: #f5a524;
+  --atlas-medium: #38bdf8;
+  --atlas-low: #64748b;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(45, 212, 191, 0.07), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(56, 189, 248, 0.06), transparent),
+    linear-gradient(180deg, #0a101c 0%, var(--atlas-bg) 40%);
+  color: var(--atlas-text);
+  font-family: 'Sora', ui-sans-serif, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.react-flow {
+  --xy-background-color: transparent;
+}
+
+.react-flow__node:not(.dragging) {
+  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 200ms ease;
+}
+
+.react-flow__controls {
+  box-shadow: none !important;
+  border: 1px solid var(--atlas-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--atlas-panel) !important;
+}
+
+.react-flow__controls-button {
+  background: var(--atlas-panel) !important;
+  border-bottom: 1px solid var(--atlas-border) !important;
+  fill: var(--atlas-muted) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #152033 !important;
+}
+
+.react-flow__minimap {
+  background: var(--atlas-panel) !important;
+  border: 1px solid var(--atlas-border) !important;
+  border-radius: 8px;
+}
+
+.edge-exploits path.react-flow__edge-path {
+  stroke: var(--atlas-vuln);
+  stroke-width: 1.75;
+  stroke-dasharray: 6 4;
+}
+
+.edge-mitigates path.react-flow__edge-path {
+  stroke: var(--atlas-guard);
+  stroke-width: 1.75;
+}
+
+.edge-requires path.react-flow__edge-path {
+  stroke: var(--atlas-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+}
+
+.edge-leads_to path.react-flow__edge-path {
+  stroke: var(--atlas-threat);
+  stroke-width: 1.5;
+}
+
+.edge-dimmed path.react-flow__edge-path {
+  opacity: 0.12;
+}
+
+.edge-active path.react-flow__edge-path {
+  stroke-width: 2.75;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.clip-threat {
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+
+@keyframes panel-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.panel-enter {
+  animation: panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sheet-enter {
+  animation: sheet-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__node,
+  .panel-enter,
+  .sheet-enter,
+  aside {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Grid texture behind canvas */
+.atlas-grid {
+  background-image:
+    linear-gradient(rgba(28, 42, 61, 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(28, 42, 61, 0.45) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
+}
