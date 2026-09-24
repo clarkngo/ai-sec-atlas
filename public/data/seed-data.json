@@ -1,0 +1,394 @@
+{
+  "domains": [
+    "Autonomous Agent & MCP Security",
+    "RAG & Knowledge Retrieval Security"
+  ],
+  "nodes": [
+    {
+      "id": "t-agent-tool-hijack",
+      "type": "threat",
+      "title": "Agent Tool Hijacking",
+      "summary": "Adversary steers an autonomous agent into invoking privileged tools with attacker-chosen arguments via prompt or memory manipulation.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM06", "MITRE-AML.T0051", "NIST-AI-RMF-GV-1.2"],
+      "impact": "Unauthorized tool execution can exfiltrate secrets, mutate production systems, or pivot into connected SaaS APIs.",
+      "remediation": [
+        "Bind every tool call to an allowlisted schema and deny unknown parameters.",
+        "Require human approval for high-impact tools (write, delete, payment, admin).",
+        "Isolate tool credentials per agent session with short-lived tokens."
+      ],
+      "verification": [
+        "Red-team with tool-name confusion and argument smuggling payloads.",
+        "Assert audit logs capture caller identity, tool name, and argument digests."
+      ],
+      "codeExample": "if (!allowlist.has(tool.name)) throw new DenyError('tool');\nvalidate(tool.args, schemas[tool.name]);"
+    },
+    {
+      "id": "t-mcp-unbounded",
+      "type": "threat",
+      "title": "Unbounded MCP Tool Calls",
+      "summary": "Model Context Protocol servers expose tools without rate, depth, or blast-radius limits, enabling recursive or fan-out abuse.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM06", "OWASP-LLM08", "MITRE-AML.T0054", "NIST-AI-6.1"],
+      "impact": "Runaway tool loops burn budget, overwhelm backends, and amplify a single injection into multi-system damage.",
+      "remediation": [
+        "Enforce per-session call budgets and maximum recursion depth.",
+        "Circuit-break on repeated identical tool invocations.",
+        "Scope MCP servers to least-privilege resource sets."
+      ],
+      "verification": [
+        "Load-test agent loops against a mock MCP server with budget counters.",
+        "Confirm circuit breakers trip before backend SLOs are breached."
+      ],
+      "codeExample": "const budget = session.toolBudget;\nif (budget.remaining <= 0) return deny('budget');\nbudget.consume(1);"
+    },
+    {
+      "id": "t-goal-drift",
+      "type": "threat",
+      "title": "Goal Alignment Drift",
+      "summary": "Long-running agents gradually reinterpret objectives after poisoned memory, competing rewards, or multi-turn adversarial framing.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM09", "MITRE-AML.T0051", "NIST-AI-MS-2.1"],
+      "impact": "Agents pursue shadow goals that violate policy while still appearing task-complete in telemetry.",
+      "remediation": [
+        "Checkpoint goals against a signed policy charter each turn.",
+        "Separate planner and executor agents with dual-approval on goal changes.",
+        "Expire and re-hash agent memory entries with integrity checks."
+      ],
+      "verification": [
+        "Inject contradictory goal updates mid-run and confirm charter veto.",
+        "Review divergence metrics between declared goal and tool sequence."
+      ]
+    },
+    {
+      "id": "v-excessive-perms",
+      "type": "vulnerability",
+      "title": "Excessive Tool Permissions",
+      "summary": "MCP tools and agent connectors inherit broad OAuth scopes or filesystem rights far beyond the task need.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM06", "MITRE-AML.T0048", "NIST-AI-6.1"],
+      "impact": "A single compromised tool call inherits admin-level reach across mail, cloud storage, and CI.",
+      "remediation": [
+        "Issue narrowly scoped tokens per tool capability.",
+        "Prefer ephemeral credentials minted at invocation time.",
+        "Deny-by-default filesystem and network egress for sandboxed runtimes."
+      ],
+      "verification": [
+        "Enumerate effective scopes in a pre-deploy permission report.",
+        "Attempt out-of-scope API calls and expect hard denials."
+      ],
+      "codeExample": "const token = mint({ scopes: tool.requiredScopes, ttl: '90s' });"
+    },
+    {
+      "id": "v-unvalidated-args",
+      "type": "vulnerability",
+      "title": "Unvalidated Function Arguments",
+      "summary": "Tool handlers accept free-form model output without schema, type, or semantic validation before execution.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM02", "MITRE-AML.T0051"],
+      "impact": "Injection payloads travel as tool arguments into SQL, shell, or privileged APIs.",
+      "remediation": [
+        "Validate every argument against a JSON Schema or protobuf contract.",
+        "Reject unexpected keys and coerce enums to closed sets.",
+        "Sanitize path and URL arguments with allowlisted hosts."
+      ],
+      "verification": [
+        "Fuzz tool endpoints with type-confused and nested payload corpora.",
+        "Ensure schema failures never reach side-effecting code."
+      ],
+      "codeExample": "const args = ToolSchema.parse(raw);\nif (args.path.includes('..')) throw new DenyError('path');"
+    },
+    {
+      "id": "v-dynamic-exec",
+      "type": "vulnerability",
+      "title": "Dynamic Code Execution",
+      "summary": "Agents evaluate model-generated code or shell snippets in-process without a sandbox boundary.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM06", "OWASP-LLM08", "MITRE-AML.T0043"],
+      "impact": "Arbitrary code execution yields host compromise, credential theft, and lateral movement.",
+      "remediation": [
+        "Run generated code only inside ephemeral containers with no secrets mounted.",
+        "Disable network egress unless explicitly gated.",
+        "Prefer declarative tool APIs over eval/exec pathways."
+      ],
+      "verification": [
+        "Attempt breakout payloads (env dump, socket open) inside the sandbox.",
+        "Confirm host PID namespace and secrets are unreachable."
+      ],
+      "codeExample": "await sandbox.run(code, { network: false, mounts: [], timeoutMs: 5000 });"
+    },
+    {
+      "id": "g-mcp-scope",
+      "type": "guardrail",
+      "title": "MCP Permission Scoping",
+      "summary": "Least-privilege capability tokens and server-side allowlists constrain every MCP tool invocation.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM06", "NIST-AI-6.1", "MITRE-AML.D0005"],
+      "impact": "Limits blast radius when an agent is steered into hostile tool use.",
+      "remediation": [
+        "Map each tool to a capability profile (read / write / admin).",
+        "Rotate short-lived tokens per session and revoke on anomaly.",
+        "Publish a permission matrix reviewed in change control."
+      ],
+      "verification": [
+        "CI gate fails if a tool requests scopes outside its profile.",
+        "Runtime denies cross-profile invocations with auditable events."
+      ],
+      "codeExample": "assertScopes(session.token, tool.profile);\nawait invoke(tool, args);"
+    },
+    {
+      "id": "g-dual-agent",
+      "type": "guardrail",
+      "title": "Dual-Agent Approval Loop",
+      "summary": "A separate verifier agent (or human) must approve high-risk tool plans before the executor proceeds.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM01", "NIST-AI-MS-2.1", "MITRE-AML.D0004"],
+      "impact": "Blocks single-pass goal drift and tool hijacking from completing silently.",
+      "remediation": [
+        "Route write/admin tools through an approval queue with TTL.",
+        "Use a differently prompted verifier model without tool credentials.",
+        "Escalate unresolved disputes to a human operator."
+      ],
+      "verification": [
+        "Simulate hijack plans and confirm executor stalls until approval.",
+        "Measure false-approve rate on a labeled red-team set."
+      ],
+      "codeExample": "const verdict = await verifier.review(plan);\nif (verdict !== 'ALLOW') return hold(plan);"
+    },
+    {
+      "id": "g-schema-validate",
+      "type": "guardrail",
+      "title": "Deterministic Tool Schema Validation",
+      "summary": "Hard schema gates reject malformed or semantically illegal tool arguments before any side effect.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "LOW",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM02", "NIST-AI-6.1"],
+      "impact": "Removes entire classes of argument-injection failures at the boundary.",
+      "remediation": [
+        "Generate schemas from typed tool definitions; never hand-edit twice.",
+        "Log and metric schema rejection rates as a detection signal.",
+        "Version schemas and reject clients on major mismatch."
+      ],
+      "verification": [
+        "Property-test schemas against adversarial JSON corpora.",
+        "Ensure zero side effects on validation failure paths."
+      ],
+      "codeExample": "const parsed = z.object({ id: z.uuid(), op: z.enum(OPS) }).parse(input);"
+    },
+    {
+      "id": "t-indirect-injection",
+      "type": "threat",
+      "title": "Indirect Prompt Injection via Documents",
+      "summary": "Malicious instructions embedded in ingested files or web pages override system intent when retrieved into context.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM01", "MITRE-AML.T0051", "NIST-AI-MS-2.1"],
+      "impact": "Retrieved content becomes an untrusted instruction channel that can exfiltrate data or redirect agent tools.",
+      "remediation": [
+        "Treat all retrieved text as untrusted data, never as system instructions.",
+        "Strip or quarantine instruction-like spans during pre-ingestion.",
+        "Use dual-LLM patterns: one model extracts facts, another answers without tool rights."
+      ],
+      "verification": [
+        "Plant hidden instruction payloads in PDF/HTML fixtures and confirm quarantine.",
+        "Assert tool-calling models never receive raw retrieved blobs as system prompts."
+      ],
+      "codeExample": "const safe = sanitizeRetrieved(chunks); // data channel only\nanswer = llm.chat({ system: POLICY, data: safe });"
+    },
+    {
+      "id": "t-vector-poison",
+      "type": "threat",
+      "title": "Vector DB Poisoning",
+      "summary": "Attacker inserts or replaces embeddings so retrieval preferentially surfaces adversarial or false content.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.T0010", "NIST-AI-MS-2.2"],
+      "impact": "Downstream answers and agent decisions are steered by poisoned neighbors in embedding space.",
+      "remediation": [
+        "Sign and version every indexed document; reject unsigned upserts.",
+        "Anomaly-detect sudden neighborhood density around new vectors.",
+        "Segment indexes by trust tier and never mix public crawl with internal ACL data."
+      ],
+      "verification": [
+        "Attempt unauthorized upserts without signing keys.",
+        "Monitor recall drift on a golden query set after each reindex."
+      ]
+    },
+    {
+      "id": "t-doc-exfil",
+      "type": "threat",
+      "title": "Unauthorized Document Exfiltration",
+      "summary": "RAG answers or agent tools leak restricted documents to users who lack ACL entitlement.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM06", "MITRE-AML.T0057", "NIST-AI-6.1"],
+      "impact": "Confidential IP, PII, or regulated records leave the trust boundary through natural-language answers.",
+      "remediation": [
+        "Enforce document-level ACLs at retrieval time, not only at UI login.",
+        "Redact PII in outputs with policy-aware filters.",
+        "Block citation of documents outside the requester's clearance."
+      ],
+      "verification": [
+        "Cross-tenant retrieval tests must return empty hit sets.",
+        "PII canaries in indexed docs must not appear in unauthorized answers."
+      ]
+    },
+    {
+      "id": "v-no-sanitize",
+      "type": "vulnerability",
+      "title": "Lack of Context Sanitization",
+      "summary": "Retrieved chunks are concatenated into prompts without stripping control tokens, markup, or instruction markers.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM02", "MITRE-AML.T0051"],
+      "impact": "Untrusted document content is interpreted as higher-privilege instructions.",
+      "remediation": [
+        "Normalize encodings and strip HTML/script before chunking.",
+        "Wrap retrieved text in explicit data delimiters the model is trained/instructed to ignore as commands.",
+        "Score and drop chunks with high instruction-likeness."
+      ],
+      "verification": [
+        "Corpus of injection fixtures must be neutralized or quarantined.",
+        "Unit tests assert delimiter integrity around every chunk."
+      ],
+      "codeExample": "chunks = chunks.map(c => `<DATA>\\n${stripControls(c)}\\n</DATA>`);"
+    },
+    {
+      "id": "v-overpriv-index",
+      "type": "vulnerability",
+      "title": "Over-Privileged Retrieval Indexing",
+      "summary": "A shared vector index mixes clearance levels, so any authenticated user can retrieve neighbors from restricted corpora.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM06", "NIST-AI-6.1"],
+      "impact": "Authorization is deferred to the chat UI while the retrieval plane already leaked candidates.",
+      "remediation": [
+        "Partition indexes by tenant and clearance.",
+        "Filter candidates with ACL checks before ranking.",
+        "Never embed secrets or credentials into searchable text."
+      ],
+      "verification": [
+        "Negative ACL tests across every index partition.",
+        "Secrets scanners fail the build if credentials appear in chunk text."
+      ]
+    },
+    {
+      "id": "v-missing-acl",
+      "type": "vulnerability",
+      "title": "Missing Document ACLs",
+      "summary": "Source documents lack enforceable ownership metadata propagated into the retrieval and citation path.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM02", "NIST-AI-6.1", "MITRE-AML.T0057"],
+      "impact": "Access decisions cannot be evaluated consistently across ingest, retrieve, and answer stages.",
+      "remediation": [
+        "Require ACL metadata at ingest; reject documents without owners.",
+        "Propagate ACL tags onto every chunk and citation.",
+        "Re-evaluate ACLs on answer rendering, not only on search."
+      ],
+      "verification": [
+        "Ingest pipeline rejects ACL-less fixtures.",
+        "Citation renderer drops links the caller cannot open."
+      ],
+      "codeExample": "if (!doc.acl?.owners?.length) throw new IngestError('acl-required');"
+    },
+    {
+      "id": "g-preingest",
+      "type": "guardrail",
+      "title": "Pre-Ingestion Scanning Pipeline",
+      "summary": "Documents are scanned for injection markers, malware, and policy violations before embeddings are written.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM03", "NIST-AI-MS-2.2"],
+      "impact": "Stops poisoned or instruction-laden content from entering the retrieval corpus.",
+      "remediation": [
+        "Run static detectors for instruction phrases and hidden text layers.",
+        "Quarantine failures into a review queue instead of indexing.",
+        "Re-scan on every document version bump."
+      ],
+      "verification": [
+        "Known-bad fixtures never reach the production index.",
+        "Quarantine SLAs and reviewer audit trails are intact."
+      ],
+      "codeExample": "const report = await scan(doc);\nif (report.risk >= 'HIGH') return quarantine(doc, report);"
+    },
+    {
+      "id": "g-doc-acl",
+      "type": "guardrail",
+      "title": "Document-Level Access Enforcement",
+      "summary": "Retrieval and citation paths enforce per-document ACLs tied to the authenticated principal.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM02", "NIST-AI-6.1", "MITRE-AML.D0005"],
+      "impact": "Prevents unauthorized document exfiltration through RAG answers.",
+      "remediation": [
+        "Filter search hits with `canRead(user, doc)` before LLM context assembly.",
+        "Bind citations to the same ACL check used for download.",
+        "Log denied retrievals for detection analytics."
+      ],
+      "verification": [
+        "Cross-user retrieval suites return zero unauthorized hits.",
+        "Denied events appear in SIEM with doc id and principal."
+      ],
+      "codeExample": "hits = hits.filter(h => acl.canRead(user, h.docId));"
+    },
+    {
+      "id": "g-output-filter",
+      "type": "guardrail",
+      "title": "Output Filtering & PII Anonymization",
+      "summary": "Post-generation filters redact PII, secrets, and out-of-policy content before the response is delivered.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "LOW",
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM06", "NIST-AI-MS-2.1"],
+      "impact": "Provides a last line of defense when retrieval or generation still surfaces sensitive spans.",
+      "remediation": [
+        "Run deterministic PII/secret detectors on every completion.",
+        "Replace matches with typed placeholders and log redaction counts.",
+        "Block responses that fail policy classifiers above threshold."
+      ],
+      "verification": [
+        "Canary SSNs and API keys never leave the filter unmasked.",
+        "Redaction metrics alert on sudden spikes."
+      ],
+      "codeExample": "return redact(completion, { pii: true, secrets: true });"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "t-agent-tool-hijack", "target": "v-excessive-perms", "relation": "EXPLOITS" },
+    { "id": "e2", "source": "t-agent-tool-hijack", "target": "v-unvalidated-args", "relation": "EXPLOITS" },
+    { "id": "e3", "source": "t-mcp-unbounded", "target": "v-excessive-perms", "relation": "EXPLOITS" },
+    { "id": "e4", "source": "t-mcp-unbounded", "target": "v-dynamic-exec", "relation": "LEADS_TO" },
+    { "id": "e5", "source": "t-goal-drift", "target": "v-unvalidated-args", "relation": "LEADS_TO" },
+    { "id": "e6", "source": "t-goal-drift", "target": "v-dynamic-exec", "relation": "EXPLOITS" },
+    { "id": "e7", "source": "g-mcp-scope", "target": "v-excessive-perms", "relation": "MITIGATES" },
+    { "id": "e8", "source": "g-mcp-scope", "target": "t-mcp-unbounded", "relation": "MITIGATES" },
+    { "id": "e9", "source": "g-dual-agent", "target": "t-agent-tool-hijack", "relation": "MITIGATES" },
+    { "id": "e10", "source": "g-dual-agent", "target": "t-goal-drift", "relation": "MITIGATES" },
+    { "id": "e11", "source": "g-schema-validate", "target": "v-unvalidated-args", "relation": "MITIGATES" },
+    { "id": "e12", "source": "g-schema-validate", "target": "t-agent-tool-hijack", "relation": "MITIGATES" },
+    { "id": "e13", "source": "g-dual-agent", "target": "g-mcp-scope", "relation": "REQUIRES" },
+    { "id": "e14", "source": "t-indirect-injection", "target": "v-no-sanitize", "relation": "EXPLOITS" },
+    { "id": "e15", "source": "t-indirect-injection", "target": "v-overpriv-index", "relation": "LEADS_TO" },
+    { "id": "e16", "source": "t-vector-poison", "target": "v-overpriv-index", "relation": "EXPLOITS" },
+    { "id": "e17", "source": "t-vector-poison", "target": "v-no-sanitize", "relation": "LEADS_TO" },
+    { "id": "e18", "source": "t-doc-exfil", "target": "v-missing-acl", "relation": "EXPLOITS" },
+    { "id": "e19", "source": "t-doc-exfil", "target": "v-overpriv-index", "relation": "EXPLOITS" },
+    { "id": "e20", "source": "g-preingest", "target": "t-indirect-injection", "relation": "MITIGATES" },
+    { "id": "e21", "source": "g-preingest", "target": "t-vector-poison", "relation": "MITIGATES" },
+    { "id": "e22", "source": "g-preingest", "target": "v-no-sanitize", "relation": "MITIGATES" },
+    { "id": "e23", "source": "g-doc-acl", "target": "t-doc-exfil", "relation": "MITIGATES" },
+    { "id": "e24", "source": "g-doc-acl", "target": "v-missing-acl", "relation": "MITIGATES" },
+    { "id": "e25", "source": "g-doc-acl", "target": "v-overpriv-index", "relation": "MITIGATES" },
+    { "id": "e26", "source": "g-output-filter", "target": "t-doc-exfil", "relation": "MITIGATES" },
+    { "id": "e27", "source": "g-output-filter", "target": "t-indirect-injection", "relation": "MITIGATES" },
+    { "id": "e28", "source": "g-doc-acl", "target": "g-preingest", "relation": "REQUIRES" }
+  ]
+}
