@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this threat model or dataset, please cite it as below."
+title: "AI Security Atlas: an interactive threat-to-guardrail map for AI agents, LLM applications, and RAG"
+abstract: >-
+  An open, interactive threat model linking adversarial threats against AI agents,
+  LLM applications, and retrieval-augmented generation to the vulnerabilities they
+  exploit and to concrete guardrails, with remediation and verification steps.
+  Entries are mapped to the OWASP Top 10 for LLM Applications (2025), the OWASP
+  Top 10 for Agentic Applications (2026), MITRE ATLAS, and the NIST AI RMF.
+  Independent project; not affiliated with MITRE.
+type: software
+authors:
+  - family-names: Ngo
+    given-names: Clark
+version: 0.2.0
+date-released: 2026-10-07
+license: MIT
+repository-code: "https://github.com/clarkngo/ai-sec-atlas"
+url: "https://clarkngo.github.io/ai-sec-atlas/"
+keywords:
+  - AI security
+  - LLM security
+  - threat modeling
+  - agentic AI
+  - RAG
+  - OWASP
+  - MITRE ATLAS
+  - NIST AI RMF

@@ -1,4 +1,4 @@
-import type { EdgeRelation, NodeKind, Severity } from '../types';
+import type { EdgeRelation, NodeKind, Severity, SourceId } from '../types';
 
 export const KIND_LABEL: Record<NodeKind, string> = {
   threat: 'Threat',
@@ -34,3 +34,12 @@ export const RELATION_LABEL: Record<EdgeRelation, string> = {
   REQUIRES: 'requires',
   LEADS_TO: 'leads to',
 };
+
+export const SOURCE_SHORT: Record<SourceId, string> = {
+  'owasp-llm': 'OWASP LLM Top 10',
+  'owasp-asi': 'OWASP Agentic Top 10',
+  'mitre-atlas': 'MITRE ATLAS',
+  'nist-ai-rmf': 'NIST AI RMF',
+};
+
+export const SOURCE_ORDER: SourceId[] = ['owasp-llm', 'owasp-asi', 'mitre-atlas', 'nist-ai-rmf'];

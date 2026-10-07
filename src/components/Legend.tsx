@@ -44,11 +44,19 @@ export function StatusBar({
   visible,
   total,
   selectedTitle,
+  repository,
+  license,
+  onAbout,
 }: {
   visible: number;
   total: number;
   selectedTitle: string | null;
+  repository: string;
+  license: string;
+  onAbout: () => void;
 }) {
+  const linkCls =
+    'text-[var(--atlas-accent)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]';
   return (
     <div className="absolute right-3 bottom-3 z-10 flex flex-col items-end gap-1.5">
       <div className="hidden rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-panel)]/95 px-2.5 py-1.5 font-mono text-[10px] text-[var(--atlas-muted)] backdrop-blur sm:block">
@@ -56,13 +64,16 @@ export function StatusBar({
         {selectedTitle ? ` · ${selectedTitle}` : ' · click a node for detail'}
       </div>
       <p className="rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-panel)]/95 px-2.5 py-1.5 font-mono text-[10px] text-[var(--atlas-muted)] backdrop-blur">
-        built by{' '}
-        <a
-          href="https://www.linkedin.com/in/clarkngo/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[var(--atlas-accent)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
-        >
+        v{__APP_VERSION__} · {license} ·{' '}
+        <a href={repository} target="_blank" rel="noopener noreferrer" className={linkCls}>
+          GitHub
+        </a>{' '}
+        ·{' '}
+        <button type="button" onClick={onAbout} className={linkCls}>
+          About
+        </button>{' '}
+        · built by{' '}
+        <a href="https://www.linkedin.com/in/clarkngo/" target="_blank" rel="noopener noreferrer" className={linkCls}>
           Clark Ngo
         </a>
       </p>

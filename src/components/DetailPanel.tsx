@@ -1,11 +1,17 @@
-import { useEffect, useId, useRef } from 'react';
-import type { AtlasNode } from '../types';
-import { KIND_ICON_PATH, KIND_LABEL, SEVERITY_LABEL } from '../lib/theme';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { AtlasData, AtlasNode, AtlasReference } from '../types';
+import { KIND_ICON_PATH, KIND_LABEL, SEVERITY_LABEL, SOURCE_ORDER, SOURCE_SHORT } from '../lib/theme';
 
 interface Props {
   node: AtlasNode;
+  data: AtlasData;
   onClose: () => void;
 }
+
+const LEVEL_SHORT = { HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' } as const;
+
+const linkCls =
+  'text-[var(--atlas-accent)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]';
 
 function severityColor(sev: AtlasNode['severity']) {
   switch (sev) {
@@ -31,9 +37,37 @@ function kindAccent(type: AtlasNode['type']) {
   }
 }
 
-export function DetailPanel({ node, onClose }: Props) {
+export function DetailPanel({ node, data, onClose }: Props) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => setCopied(false), [node.id]);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const refsBySource = SOURCE_ORDER.map((source) => ({
+    source,
+    refs: node.frameworks
+      .map((key) => data.references[key])
+      .filter((r): r is AtlasReference => r?.source === source),
+  })).filter((g) => g.refs.length > 0);
+
+  const mitigated =
+    node.type === 'guardrail'
+      ? data.edges
+          .filter((e) => e.source === node.id && e.relation === 'MITIGATES')
+          .map((e) => data.nodes.find((n) => n.id === e.target))
+          .filter((n): n is AtlasNode => !!n)
+      : [];
+  const method = data.meta.severityMethod;
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -83,7 +117,7 @@ export function DetailPanel({ node, onClose }: Props) {
                   background: `${severityColor(node.severity)}18`,
                 }}
               >
-                {SEVERITY_LABEL[node.severity]}
+                {node.type === 'guardrail' ? `Addresses ${SEVERITY_LABEL[node.severity]}` : SEVERITY_LABEL[node.severity]}
               </span>
             </div>
             <h2 id={titleId} className="mt-1 text-base font-semibold leading-snug text-[var(--atlas-text)]">
@@ -91,14 +125,23 @@ export function DetailPanel({ node, onClose }: Props) {
             </h2>
             <p className="mt-0.5 font-mono text-[10px] text-[var(--atlas-muted)]">{node.domain}</p>
           </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="rounded-md border border-[var(--atlas-border)] px-2 py-1 text-xs text-[var(--atlas-muted)] hover:text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
-          >
-            Close
-          </button>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-[var(--atlas-border)] px-2 py-1 text-xs text-[var(--atlas-muted)] hover:text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={copyLink}
+              className="rounded-md border border-[var(--atlas-border)] px-2 py-1 text-xs text-[var(--atlas-muted)] hover:text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
+            >
+              <span aria-live="polite">{copied ? 'Copied' : 'Copy link'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 text-sm">
@@ -113,19 +156,63 @@ export function DetailPanel({ node, onClose }: Props) {
           </section>
 
           <section>
+            <h3 className="mb-1 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">
+              Why this severity
+            </h3>
+            {node.risk ? (
+              <>
+                <p className="font-mono text-[11px] text-[var(--atlas-text)]">
+                  Impact {LEVEL_SHORT[node.risk.impact]} × Likelihood {LEVEL_SHORT[node.risk.likelihood]} ={' '}
+                  <span style={{ color: severityColor(node.severity) }}>{SEVERITY_LABEL[node.severity]}</span>
+                </p>
+                <p className="mt-1 leading-relaxed text-[var(--atlas-text)]/90">{node.risk.rationale}</p>
+              </>
+            ) : (
+              <p className="leading-relaxed text-[var(--atlas-text)]/90">
+                Guardrails inherit the highest severity of the risks they mitigate:{' '}
+                {mitigated.map((m, i) => (
+                  <span key={m.id}>
+                    {i > 0 && ', '}
+                    {m.title} ({SEVERITY_LABEL[m.severity]})
+                  </span>
+                ))}
+                .
+              </p>
+            )}
+            <p className="mt-1 text-[11px] text-[var(--atlas-muted)]">
+              Method:{' '}
+              <a href={method.url} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                {method.name}
+              </a>
+            </p>
+          </section>
+
+          <section>
             <h3 className="mb-2 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">
               Framework mapping
             </h3>
-            <ul className="flex flex-wrap gap-1.5">
-              {node.frameworks.map((fw) => (
-                <li
-                  key={fw}
-                  className="rounded border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-2 py-1 font-mono text-[11px] text-[var(--atlas-accent)]"
-                >
-                  {fw}
-                </li>
+            <div className="space-y-2.5">
+              {refsBySource.map(({ source, refs }) => (
+                <div key={source}>
+                  <p className="mb-1 text-[11px] font-medium text-[var(--atlas-muted)]">{SOURCE_SHORT[source]}</p>
+                  <ul className="space-y-1">
+                    {refs.map((r) => (
+                      <li key={r.code} className="flex gap-2 text-[12px] leading-snug">
+                        <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`shrink-0 font-mono ${linkCls}`}
+                        >
+                          {r.code}
+                        </a>
+                        <span className="text-[var(--atlas-text)]/90">{r.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
           <section>
