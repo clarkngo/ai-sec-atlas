@@ -27,6 +27,9 @@ npm run preview  # preview the production build locally
 
 1. **Autonomous Agent & MCP Security** — tool hijacking, unbounded MCP calls, goal drift → permission scoping, dual-agent approval, schema validation
 2. **RAG & Knowledge Retrieval Security** — indirect injection, vector poisoning, document exfiltration → pre-ingest scanning, document ACLs, output filtering
+3. **Model Supply Chain & Training Integrity** — data poisoning, malicious model artifacts, model extraction → signed registry & AIBOM, safe artifact loading, dataset provenance, inference quotas
+4. **LLM Application & Output Security** — system prompt extraction, jailbreaks, output-rendered exfiltration → output encoding & CSP, prompt hygiene & canaries, I/O safety classifiers
+5. **Multi-Agent & Memory Trust** — persistent memory poisoning, MCP tool description poisoning, inter-agent impersonation → memory provenance, tool manifest pinning, agent workload identity
 
 Edit the threat database at [`public/data/seed-data.json`](public/data/seed-data.json).
 

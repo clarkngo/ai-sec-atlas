@@ -1,7 +1,10 @@
 {
   "domains": [
     "Autonomous Agent & MCP Security",
-    "RAG & Knowledge Retrieval Security"
+    "RAG & Knowledge Retrieval Security",
+    "Model Supply Chain & Training Integrity",
+    "LLM Application & Output Security",
+    "Multi-Agent & Memory Trust"
   ],
   "nodes": [
     {
@@ -359,6 +362,548 @@
         "Redaction metrics alert on sudden spikes."
       ],
       "codeExample": "return redact(completion, { pii: true, secrets: true });"
+    },
+    {
+      "id": "t-data-poison",
+      "type": "threat",
+      "title": "Training & Fine-Tune Data Poisoning",
+      "summary": "Adversary seeds pre-training, fine-tuning, or RLHF data with crafted samples that implant backdoors or skew behavior.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM04", "MITRE-AML.T0020", "MITRE-AML.T0018", "NIST-AI-MS-2.2"],
+      "impact": "A trigger phrase silently flips model behavior in production, bypassing safety tuning and evading standard evals.",
+      "remediation": [
+        "Track provenance for every dataset shard and fine-tune contribution.",
+        "Deduplicate and outlier-filter training data before each run.",
+        "Hold out trigger-hunting and behavioral-diff evals between model versions."
+      ],
+      "verification": [
+        "Train a canary model on a planted-trigger fixture and confirm detectors flag it.",
+        "Compare refusal and toxicity rates against the previous release on a frozen suite."
+      ]
+    },
+    {
+      "id": "t-malicious-artifact",
+      "type": "threat",
+      "title": "Malicious Model Artifacts",
+      "summary": "Downloaded model weights or adapters carry executable payloads via unsafe serialization formats such as pickle.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.T0010", "MITRE-AML.T0011", "NIST-AI-GV-6.1"],
+      "impact": "Loading the model executes attacker code on training clusters or inference hosts with access to data and credentials.",
+      "remediation": [
+        "Load only tensor-only formats (safetensors, GGUF) from untrusted sources.",
+        "Pin model revisions by content hash, never by mutable tag.",
+        "Scan artifacts in an isolated job before promotion to the registry."
+      ],
+      "verification": [
+        "Attempt to load a pickle with an os.system payload and expect a hard failure.",
+        "Registry rejects artifacts whose digest differs from the signed manifest."
+      ],
+      "codeExample": "model = load_file('model.safetensors')  # never torch.load(untrusted)"
+    },
+    {
+      "id": "t-model-extraction",
+      "type": "threat",
+      "title": "Model Extraction via Inference API",
+      "summary": "Attacker issues high-volume, structured queries to reconstruct model behavior or distill a functional copy.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM10", "MITRE-AML.T0024", "MITRE-AML.T0040", "NIST-AI-MS-2.7"],
+      "impact": "Loss of proprietary model IP and a white-box surrogate that accelerates adversarial attacks.",
+      "remediation": [
+        "Enforce per-key query quotas and anomaly detection on query distribution.",
+        "Return only the fields callers need; suppress logprobs by default.",
+        "Watermark outputs to support attribution of distilled copies."
+      ],
+      "verification": [
+        "Replay a synthetic extraction workload and confirm throttling triggers.",
+        "Verify logprob and embedding endpoints require elevated scopes."
+      ]
+    },
+    {
+      "id": "v-unsafe-serialization",
+      "type": "vulnerability",
+      "title": "Unsafe Model Deserialization",
+      "summary": "Pipelines call pickle-based loaders on third-party checkpoints, tokenizers, or LoRA adapters.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.T0011", "NIST-AI-GV-6.1"],
+      "impact": "Model loading becomes a remote code execution primitive.",
+      "remediation": [
+        "Ban torch.load / pickle.load on untrusted input via lint rules.",
+        "Convert legacy checkpoints to safetensors in a sandbox once, then pin.",
+        "Set weights_only=True where pickle cannot yet be removed."
+      ],
+      "verification": [
+        "Static analysis fails CI on banned loader calls.",
+        "Sandbox conversion jobs have no network or secret mounts."
+      ],
+      "codeExample": "torch.load(path, weights_only=True)"
+    },
+    {
+      "id": "v-no-provenance",
+      "type": "vulnerability",
+      "title": "Unverified Data & Model Provenance",
+      "summary": "Datasets, base models, and adapters are pulled from public hubs without signatures, hashes, or an AI bill of materials.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM03", "OWASP-LLM04", "MITRE-AML.T0010", "NIST-AI-MP-4.1"],
+      "impact": "Teams cannot tell which upstream component introduced a backdoor or license violation.",
+      "remediation": [
+        "Maintain an AIBOM listing every dataset, model, and adapter with digests.",
+        "Mirror approved artifacts into an internal registry.",
+        "Require signed attestations for third-party components."
+      ],
+      "verification": [
+        "Every deployed model resolves to a complete AIBOM entry.",
+        "Builds fail when an artifact lacks a matching signature."
+      ]
+    },
+    {
+      "id": "v-open-inference",
+      "type": "vulnerability",
+      "title": "Unrestricted Inference Endpoints",
+      "summary": "Inference APIs expose logprobs, embeddings, or unlimited throughput to any authenticated or anonymous caller.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM10", "MITRE-AML.T0040", "MITRE-AML.T0034"],
+      "impact": "Enables extraction, membership inference, and cost harvesting at scale.",
+      "remediation": [
+        "Rate-limit by key, IP, and organization with burst controls.",
+        "Gate logprobs and raw embeddings behind explicit scopes.",
+        "Alert on query patterns that sweep the input space systematically."
+      ],
+      "verification": [
+        "Anonymous callers receive 401 on every inference route.",
+        "Quota exhaustion returns 429 before backend saturation."
+      ]
+    },
+    {
+      "id": "g-model-signing",
+      "type": "guardrail",
+      "title": "Signed Model Registry & AIBOM",
+      "summary": "Only signed, hash-pinned artifacts with a recorded bill of materials can be promoted to training or serving.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.M0013", "MITRE-AML.M0014", "NIST-AI-GV-6.1"],
+      "impact": "Breaks the supply-chain path from a public hub to production inference.",
+      "remediation": [
+        "Sign artifacts at build time (e.g. Sigstore) and verify at load.",
+        "Record base model, datasets, and adapters in the AIBOM.",
+        "Block promotion when a dependency is revoked upstream."
+      ],
+      "verification": [
+        "Tampered weights fail verification in the serving bootstrap.",
+        "AIBOM diff is attached to every model release."
+      ],
+      "codeExample": "verifySignature(artifact, trustRoot);\nassert(artifact.digest === manifest.digest);"
+    },
+    {
+      "id": "g-safe-loading",
+      "type": "guardrail",
+      "title": "Safe Artifact Loading Policy",
+      "summary": "Loaders accept only tensor-only formats and run first-time conversions inside an isolated sandbox.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "LOW",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.M0016", "NIST-AI-MG-3.1"],
+      "impact": "Removes deserialization RCE as a class from model pipelines.",
+      "remediation": [
+        "Allowlist file extensions at the registry boundary.",
+        "Run ModelScan-style scanners on every upload.",
+        "Quarantine artifacts that contain opcodes beyond tensor data."
+      ],
+      "verification": [
+        "Known-malicious pickle fixtures are rejected at upload.",
+        "Serving images contain no pickle-capable loader paths."
+      ]
+    },
+    {
+      "id": "g-data-provenance",
+      "type": "guardrail",
+      "title": "Dataset Provenance & Poison Screening",
+      "summary": "Training data is traced to source, filtered for anomalies, and screened for trigger patterns before each run.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM04", "MITRE-AML.M0007", "NIST-AI-MS-2.2"],
+      "impact": "Reduces the chance that a backdoor survives into a released checkpoint.",
+      "remediation": [
+        "Hash and log every shard with its origin and license.",
+        "Apply spectral-signature or activation-clustering screens on fine-tune sets.",
+        "Gate releases on behavioral-diff evals against the prior model."
+      ],
+      "verification": [
+        "Planted poison fixtures are flagged before training starts.",
+        "Release checklist links the provenance report for each dataset."
+      ]
+    },
+    {
+      "id": "g-query-throttle",
+      "type": "guardrail",
+      "title": "Inference Quotas & Output Watermarking",
+      "summary": "Per-tenant quotas, scoped access to sensitive outputs, and watermarking deter extraction and support attribution.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "LOW",
+      "frameworks": ["OWASP-LLM10", "MITRE-AML.M0004", "NIST-AI-MS-2.7"],
+      "impact": "Raises the cost of model theft and makes distilled copies traceable.",
+      "remediation": [
+        "Token-bucket limits per key and per organization.",
+        "Disable logprobs unless the caller holds a research scope.",
+        "Embed statistical watermarks in generated text where supported."
+      ],
+      "verification": [
+        "Extraction simulations hit quota before reaching useful fidelity.",
+        "Watermark detector identifies outputs from a sampled corpus."
+      ],
+      "codeExample": "if (!bucket.take(key, tokens)) return res.status(429).end();"
+    },
+    {
+      "id": "t-system-prompt-leak",
+      "type": "threat",
+      "title": "System Prompt Extraction",
+      "summary": "Users coax the model into revealing hidden instructions, embedded credentials, or business logic.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM07", "MITRE-AML.T0056", "NIST-AI-MS-2.10"],
+      "impact": "Leaked prompts reveal guardrail logic, internal endpoints, and sometimes live secrets.",
+      "remediation": [
+        "Assume the system prompt is public; keep secrets and authz logic out of it.",
+        "Enforce policy in code, not in natural-language instructions.",
+        "Detect verbatim prompt echoes in outputs."
+      ],
+      "verification": [
+        "Run a prompt-extraction corpus and confirm no secrets appear.",
+        "Canary strings in the system prompt trigger alerts if emitted."
+      ]
+    },
+    {
+      "id": "t-jailbreak",
+      "type": "threat",
+      "title": "Jailbreak & Safety Bypass",
+      "summary": "Role-play, encoding tricks, or many-shot prompting push the model past its safety policy.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM01", "MITRE-AML.T0054", "NIST-AI-MS-2.6"],
+      "impact": "The application produces harmful, defamatory, or policy-violating content under its own brand.",
+      "remediation": [
+        "Layer input and output classifiers independent of the base model.",
+        "Cap conversation length and context stuffing for untrusted users.",
+        "Continuously red-team against fresh jailbreak corpora."
+      ],
+      "verification": [
+        "Track attack success rate per release on a frozen jailbreak suite.",
+        "Classifier failures are logged with full transcripts for review."
+      ]
+    },
+    {
+      "id": "t-output-exfil",
+      "type": "threat",
+      "title": "Output-Rendered Data Exfiltration",
+      "summary": "Injected instructions make the model emit markdown images, links, or HTML that leak context to attacker URLs when rendered.",
+      "domain": "LLM Application & Output Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM05", "OWASP-LLM02", "MITRE-AML.T0057", "NIST-AI-MS-2.10"],
+      "impact": "Chat history, documents, or tokens are sent to an attacker server with zero user clicks.",
+      "remediation": [
+        "Never auto-load remote images or iframes from model output.",
+        "Restrict rendered link targets to an allowlist of domains.",
+        "Treat model output as untrusted input to the frontend."
+      ],
+      "verification": [
+        "Plant an image-exfil payload and confirm no outbound request occurs.",
+        "CSP violation reports stay at zero in production."
+      ]
+    },
+    {
+      "id": "v-secrets-in-prompt",
+      "type": "vulnerability",
+      "title": "Secrets & Policy in System Prompt",
+      "summary": "API keys, internal URLs, or access rules are embedded directly in prompts the model can repeat.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM07", "OWASP-LLM02", "MITRE-AML.T0056"],
+      "impact": "One successful extraction exposes credentials and reveals how to bypass controls.",
+      "remediation": [
+        "Move secrets to server-side tool handlers.",
+        "Express authorization as code paths, not instructions.",
+        "Scan prompt templates for credential patterns in CI."
+      ],
+      "verification": [
+        "Secret scanners run on prompt template directories.",
+        "Prompt templates contain no hostnames outside an allowlist."
+      ]
+    },
+    {
+      "id": "v-unsafe-render",
+      "type": "vulnerability",
+      "title": "Unsanitized Output Rendering",
+      "summary": "Frontends render model output as raw HTML or markdown with remote resources enabled.",
+      "domain": "LLM Application & Output Security",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM05", "MITRE-AML.T0057"],
+      "impact": "XSS, CSRF, and zero-click exfiltration through the chat UI.",
+      "remediation": [
+        "Render with a sanitizer that strips scripts, event handlers, and remote images.",
+        "Apply a strict Content-Security-Policy on chat surfaces.",
+        "Proxy or block external URLs in generated links."
+      ],
+      "verification": [
+        "XSS payload corpus produces no script execution.",
+        "Browser tests confirm img-src blocks non-allowlisted hosts."
+      ],
+      "codeExample": "html = DOMPurify.sanitize(marked(output), { FORBID_TAGS: ['img', 'iframe'] });"
+    },
+    {
+      "id": "v-single-layer-safety",
+      "type": "vulnerability",
+      "title": "Single-Layer Safety Reliance",
+      "summary": "The application relies solely on the base model's alignment with no independent input or output checks.",
+      "domain": "LLM Application & Output Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM09", "NIST-AI-MG-2.2"],
+      "impact": "Any jailbreak that beats the base model reaches users unfiltered.",
+      "remediation": [
+        "Add independent moderation on both input and output.",
+        "Define application-specific deny policies beyond vendor defaults.",
+        "Fail closed when the classifier is unavailable."
+      ],
+      "verification": [
+        "Disabling the classifier service blocks responses rather than passing them.",
+        "Policy suite covers app-specific harms, not only generic ones."
+      ]
+    },
+    {
+      "id": "g-output-encoding",
+      "type": "guardrail",
+      "title": "Output Encoding & Strict CSP",
+      "summary": "Model output is sanitized and rendered under a Content-Security-Policy that forbids remote resource loads.",
+      "domain": "LLM Application & Output Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM05", "NIST-AI-MG-3.2"],
+      "impact": "Neutralizes markdown-image and HTML exfiltration channels regardless of injection success.",
+      "remediation": [
+        "Sanitize output server-side and again at render.",
+        "Set img-src and connect-src to self plus a vetted allowlist.",
+        "Show link destinations before navigation."
+      ],
+      "verification": [
+        "CSP headers present on every chat route.",
+        "Exfil fixtures produce CSP reports, not network hits."
+      ],
+      "codeExample": "Content-Security-Policy: default-src 'self'; img-src 'self' data:; connect-src 'self'"
+    },
+    {
+      "id": "g-prompt-hygiene",
+      "type": "guardrail",
+      "title": "Prompt Hygiene & Canary Detection",
+      "summary": "System prompts carry no secrets, include canary tokens, and outputs are scanned for prompt echoes.",
+      "domain": "LLM Application & Output Security",
+      "severity": "LOW",
+      "frameworks": ["OWASP-LLM07", "MITRE-AML.M0015", "NIST-AI-MS-2.10"],
+      "impact": "Turns prompt leakage into a detectable, low-impact event.",
+      "remediation": [
+        "Insert a unique canary string per deployment.",
+        "Block or flag completions with high overlap to the system prompt.",
+        "Review prompt templates in code review like source code."
+      ],
+      "verification": [
+        "Canary appearance raises a SIEM alert within one minute.",
+        "Overlap detector blocks verbatim prompt dumps."
+      ],
+      "codeExample": "if (completion.includes(CANARY) || overlap(completion, SYSTEM) > 0.6) return block();"
+    },
+    {
+      "id": "g-io-classifiers",
+      "type": "guardrail",
+      "title": "Input/Output Safety Classifiers",
+      "summary": "Independent classifiers screen prompts and completions against application and vendor policy.",
+      "domain": "LLM Application & Output Security",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM01", "MITRE-AML.M0015", "NIST-AI-MG-2.2"],
+      "impact": "Adds a second, differently trained layer that jailbreaks must beat.",
+      "remediation": [
+        "Run input screening before the main model call.",
+        "Run output screening before streaming to the user.",
+        "Tune thresholds per surface and audience."
+      ],
+      "verification": [
+        "False-negative rate measured on a labeled jailbreak set each release.",
+        "Classifier latency stays within the streaming budget."
+      ]
+    },
+    {
+      "id": "t-memory-poison",
+      "type": "threat",
+      "title": "Persistent Memory Poisoning",
+      "summary": "Attacker plants instructions or false facts in an agent's long-term memory so they replay in future sessions.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM04", "MITRE-AML.T0051", "NIST-AI-MS-2.1"],
+      "impact": "A one-time injection becomes a durable backdoor affecting every later conversation.",
+      "remediation": [
+        "Tag every memory write with source, trust level, and author.",
+        "Require confirmation before storing instruction-like memories.",
+        "Let users inspect and delete stored memories."
+      ],
+      "verification": [
+        "Inject a memory via a retrieved document and confirm it is quarantined.",
+        "Expired memories are absent from new sessions."
+      ]
+    },
+    {
+      "id": "t-tool-poisoning",
+      "type": "threat",
+      "title": "MCP Tool Description Poisoning",
+      "summary": "A malicious or compromised MCP server hides instructions in tool names, descriptions, or schemas, or swaps them after approval.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "CRITICAL",
+      "frameworks": ["OWASP-LLM03", "OWASP-LLM01", "MITRE-AML.T0010", "MITRE-AML.T0051"],
+      "impact": "Agents follow hidden directives from tool metadata, leaking data or shadowing trusted tools.",
+      "remediation": [
+        "Pin tool manifests by hash and re-approve on any change.",
+        "Show full tool descriptions to users at install time.",
+        "Namespace tools per server to prevent shadowing."
+      ],
+      "verification": [
+        "Mutate a tool description post-approval and confirm the client refuses it.",
+        "Scan manifests for instruction-like text before connecting."
+      ]
+    },
+    {
+      "id": "t-agent-impersonation",
+      "type": "threat",
+      "title": "Inter-Agent Impersonation",
+      "summary": "A rogue agent spoofs a trusted peer in a multi-agent system to issue tasks or receive delegated data.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM06", "MITRE-AML.T0051", "NIST-AI-GV-6.1"],
+      "impact": "Delegated credentials and sensitive results flow to an attacker-controlled agent.",
+      "remediation": [
+        "Authenticate agents with workload identity, not self-declared names.",
+        "Sign task messages and verify on receipt.",
+        "Scope delegated tokens to the specific subtask."
+      ],
+      "verification": [
+        "Unsigned or mis-signed task messages are rejected.",
+        "Delegated tokens fail outside their intended audience."
+      ]
+    },
+    {
+      "id": "v-unprovenanced-memory",
+      "type": "vulnerability",
+      "title": "Memory Writes Without Provenance",
+      "summary": "Agents persist memories from any context source with no record of where the content came from.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM04", "MITRE-AML.T0051"],
+      "impact": "Untrusted retrieved content is promoted to trusted long-term state.",
+      "remediation": [
+        "Store provenance metadata alongside each memory entry.",
+        "Weight or exclude low-trust memories at recall time.",
+        "Apply TTLs and periodic integrity review."
+      ],
+      "verification": [
+        "Memory store schema rejects entries missing a source field.",
+        "Recall excludes entries flagged as untrusted."
+      ],
+      "codeExample": "memory.write({ text, source: ctx.origin, trust: ctx.trust, ttl: '30d' });"
+    },
+    {
+      "id": "v-mutable-tool-manifest",
+      "type": "vulnerability",
+      "title": "Mutable Tool Manifests",
+      "summary": "MCP clients trust tool metadata fetched at runtime and do not detect changes after initial approval.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.T0010"],
+      "impact": "Enables rug-pull attacks where a benign tool turns malicious after users approve it.",
+      "remediation": [
+        "Hash tool definitions at approval and compare on every session.",
+        "Prompt for re-consent when a manifest changes.",
+        "Prefer servers distributed through a vetted internal registry."
+      ],
+      "verification": [
+        "Manifest drift test triggers re-approval UI.",
+        "Client logs record manifest hashes per session."
+      ]
+    },
+    {
+      "id": "v-unauth-agent-channel",
+      "type": "vulnerability",
+      "title": "Unauthenticated Agent Channels",
+      "summary": "Agent-to-agent messages travel over channels without mutual authentication or message integrity.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "frameworks": ["OWASP-LLM06", "NIST-AI-GV-6.1"],
+      "impact": "Any process on the network can inject tasks or read delegated results.",
+      "remediation": [
+        "Use mTLS or signed JWTs between agents.",
+        "Bind each message to sender identity and nonce.",
+        "Reject replays outside a short time window."
+      ],
+      "verification": [
+        "Replayed messages are rejected after the nonce window.",
+        "Network tests confirm plaintext channels are closed."
+      ]
+    },
+    {
+      "id": "g-memory-provenance",
+      "type": "guardrail",
+      "title": "Memory Provenance & Review",
+      "summary": "Long-term memory stores track source and trust, expire entries, and expose them for user review.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM04", "MITRE-AML.M0007", "NIST-AI-MG-3.2"],
+      "impact": "Limits how long and how widely a poisoned memory can influence behavior.",
+      "remediation": [
+        "Separate memory tiers for user-stated, agent-inferred, and retrieved facts.",
+        "Never auto-store instruction-like content from untrusted tiers.",
+        "Provide a memory audit UI with delete controls."
+      ],
+      "verification": [
+        "Poison fixtures in retrieved content never reach the trusted tier.",
+        "TTL sweeps run on schedule and are audited."
+      ]
+    },
+    {
+      "id": "g-tool-pinning",
+      "type": "guardrail",
+      "title": "Tool Manifest Pinning & Review",
+      "summary": "Tool definitions are hash-pinned at approval, scanned for hidden instructions, and re-approved on change.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM03", "MITRE-AML.M0014", "NIST-AI-GV-6.1"],
+      "impact": "Stops tool poisoning and post-approval rug pulls before tools reach the model.",
+      "remediation": [
+        "Compute a canonical hash of name, description, and schema.",
+        "Diff and surface changes to the user before reconnecting.",
+        "Block descriptions that address the model directly."
+      ],
+      "verification": [
+        "Changed manifests never load without fresh consent.",
+        "Scanner flags fixtures containing hidden directives."
+      ],
+      "codeExample": "if (sha256(canonical(tool)) !== pinned[tool.id]) return requireReapproval(tool);"
+    },
+    {
+      "id": "g-agent-identity",
+      "type": "guardrail",
+      "title": "Agent Workload Identity & Signed Tasks",
+      "summary": "Each agent holds a verifiable workload identity, and every delegated task is signed and audience-scoped.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "MEDIUM",
+      "frameworks": ["OWASP-LLM06", "NIST-AI-GV-6.1", "MITRE-AML.M0005"],
+      "impact": "Makes impersonation and task injection between agents cryptographically detectable.",
+      "remediation": [
+        "Issue SPIFFE-style identities per agent workload.",
+        "Sign task envelopes and include audience and expiry.",
+        "Log delegation chains for forensic replay."
+      ],
+      "verification": [
+        "Forged identities fail mutual TLS handshakes.",
+        "Delegation audit reconstructs the full chain for any task."
+      ],
+      "codeExample": "verifyEnvelope(msg, { audience: SELF_ID, maxAgeSec: 60 });"
     }
   ],
   "edges": [
@@ -389,6 +934,43 @@
     { "id": "e25", "source": "g-doc-acl", "target": "v-overpriv-index", "relation": "MITIGATES" },
     { "id": "e26", "source": "g-output-filter", "target": "t-doc-exfil", "relation": "MITIGATES" },
     { "id": "e27", "source": "g-output-filter", "target": "t-indirect-injection", "relation": "MITIGATES" },
-    { "id": "e28", "source": "g-doc-acl", "target": "g-preingest", "relation": "REQUIRES" }
+    { "id": "e28", "source": "g-doc-acl", "target": "g-preingest", "relation": "REQUIRES" },
+    { "id": "e29", "source": "t-data-poison", "target": "v-no-provenance", "relation": "EXPLOITS" },
+    { "id": "e30", "source": "t-malicious-artifact", "target": "v-unsafe-serialization", "relation": "EXPLOITS" },
+    { "id": "e31", "source": "t-malicious-artifact", "target": "v-no-provenance", "relation": "EXPLOITS" },
+    { "id": "e32", "source": "t-model-extraction", "target": "v-open-inference", "relation": "EXPLOITS" },
+    { "id": "e33", "source": "t-data-poison", "target": "t-malicious-artifact", "relation": "LEADS_TO" },
+    { "id": "e34", "source": "g-model-signing", "target": "v-no-provenance", "relation": "MITIGATES" },
+    { "id": "e35", "source": "g-model-signing", "target": "t-malicious-artifact", "relation": "MITIGATES" },
+    { "id": "e36", "source": "g-safe-loading", "target": "v-unsafe-serialization", "relation": "MITIGATES" },
+    { "id": "e37", "source": "g-data-provenance", "target": "t-data-poison", "relation": "MITIGATES" },
+    { "id": "e38", "source": "g-data-provenance", "target": "v-no-provenance", "relation": "MITIGATES" },
+    { "id": "e39", "source": "g-query-throttle", "target": "v-open-inference", "relation": "MITIGATES" },
+    { "id": "e40", "source": "g-query-throttle", "target": "t-model-extraction", "relation": "MITIGATES" },
+    { "id": "e41", "source": "g-safe-loading", "target": "g-model-signing", "relation": "REQUIRES" },
+    { "id": "e42", "source": "t-system-prompt-leak", "target": "v-secrets-in-prompt", "relation": "EXPLOITS" },
+    { "id": "e43", "source": "t-jailbreak", "target": "v-single-layer-safety", "relation": "EXPLOITS" },
+    { "id": "e44", "source": "t-output-exfil", "target": "v-unsafe-render", "relation": "EXPLOITS" },
+    { "id": "e45", "source": "t-jailbreak", "target": "v-secrets-in-prompt", "relation": "LEADS_TO" },
+    { "id": "e46", "source": "t-system-prompt-leak", "target": "v-single-layer-safety", "relation": "EXPLOITS" },
+    { "id": "e47", "source": "g-output-encoding", "target": "v-unsafe-render", "relation": "MITIGATES" },
+    { "id": "e48", "source": "g-output-encoding", "target": "t-output-exfil", "relation": "MITIGATES" },
+    { "id": "e49", "source": "g-prompt-hygiene", "target": "v-secrets-in-prompt", "relation": "MITIGATES" },
+    { "id": "e50", "source": "g-prompt-hygiene", "target": "t-system-prompt-leak", "relation": "MITIGATES" },
+    { "id": "e51", "source": "g-io-classifiers", "target": "v-single-layer-safety", "relation": "MITIGATES" },
+    { "id": "e52", "source": "g-io-classifiers", "target": "t-jailbreak", "relation": "MITIGATES" },
+    { "id": "e53", "source": "g-prompt-hygiene", "target": "g-io-classifiers", "relation": "REQUIRES" },
+    { "id": "e54", "source": "t-memory-poison", "target": "v-unprovenanced-memory", "relation": "EXPLOITS" },
+    { "id": "e55", "source": "t-tool-poisoning", "target": "v-mutable-tool-manifest", "relation": "EXPLOITS" },
+    { "id": "e56", "source": "t-tool-poisoning", "target": "v-unprovenanced-memory", "relation": "LEADS_TO" },
+    { "id": "e57", "source": "t-agent-impersonation", "target": "v-unauth-agent-channel", "relation": "EXPLOITS" },
+    { "id": "e58", "source": "t-memory-poison", "target": "v-unauth-agent-channel", "relation": "LEADS_TO" },
+    { "id": "e59", "source": "g-memory-provenance", "target": "v-unprovenanced-memory", "relation": "MITIGATES" },
+    { "id": "e60", "source": "g-memory-provenance", "target": "t-memory-poison", "relation": "MITIGATES" },
+    { "id": "e61", "source": "g-tool-pinning", "target": "v-mutable-tool-manifest", "relation": "MITIGATES" },
+    { "id": "e62", "source": "g-tool-pinning", "target": "t-tool-poisoning", "relation": "MITIGATES" },
+    { "id": "e63", "source": "g-agent-identity", "target": "v-unauth-agent-channel", "relation": "MITIGATES" },
+    { "id": "e64", "source": "g-agent-identity", "target": "t-agent-impersonation", "relation": "MITIGATES" },
+    { "id": "e65", "source": "g-tool-pinning", "target": "g-agent-identity", "relation": "REQUIRES" }
   ]
 }
