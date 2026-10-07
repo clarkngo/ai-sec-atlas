@@ -15,6 +15,7 @@ import { createSearchIndex, searchNodes } from './lib/search';
 import { RELATION_LABEL } from './lib/theme';
 import { Header } from './components/Header';
 import { DetailPanel } from './components/DetailPanel';
+import { AboutDialog } from './components/AboutDialog';
 import { Legend, StatusBar } from './components/Legend';
 import {
   GuardrailNode,
@@ -31,6 +32,21 @@ const nodeTypes = {
 
 const reduceMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Deep links: `#node=<id>` selects a node, `#about` opens the About dialog. */
+function readHash(): { node: string | null; about: boolean } {
+  const h = window.location.hash.replace(/^#/, '');
+  if (h === 'about') return { node: null, about: true };
+  const m = /^node=([\w-]+)$/.exec(h);
+  return { node: m ? m[1] : null, about: false };
+}
+
+function writeHash(hash: string) {
+  const url = `${window.location.pathname}${window.location.search}${hash ? `#${hash}` : ''}`;
+  if (url !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+    window.history.replaceState(null, '', url);
+  }
+}
 
 function edgeClass(relation: string, active: boolean, dimmed: boolean) {
   const base = `edge-${relation.toLowerCase()}`;
@@ -82,9 +98,27 @@ function Atlas({ data }: { data: AtlasData }) {
   const [severity, setSeverity] = useState<Severity | 'ALL'>('ALL');
   const [direction, setDirection] = useState<LayoutDirection>('TB');
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const id = readHash().node;
+    return id && data.nodes.some((n) => n.id === id) ? id : null;
+  });
+  const [aboutOpen, setAboutOpen] = useState(() => readHash().about);
 
-  const fuse = useMemo(() => createSearchIndex(data.nodes), [data.nodes]);
+  useEffect(() => {
+    writeHash(aboutOpen ? 'about' : selectedId ? `node=${selectedId}` : '');
+  }, [selectedId, aboutOpen]);
+
+  useEffect(() => {
+    const onHash = () => {
+      const h = readHash();
+      setAboutOpen(h.about);
+      setSelectedId(h.node && data.nodes.some((n) => n.id === h.node) ? h.node : null);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [data.nodes]);
+
+  const fuse = useMemo(() => createSearchIndex(data.nodes, data.references), [data.nodes, data.references]);
   const matchIds = useMemo(() => searchNodes(fuse, query), [fuse, query]);
   const searching = query.trim().length > 0;
 
@@ -179,9 +213,11 @@ function Atlas({ data }: { data: AtlasData }) {
     const visible = searching
       ? filteredNodes.filter((n) => matchIds.has(n.id))
       : filteredNodes;
+    // Guardrail severity is derived from what they mitigate, so only risks are counted.
+    const risks = visible.filter((n) => n.type !== 'guardrail');
     return {
-      critical: visible.filter((n) => n.severity === 'CRITICAL').length,
-      high: visible.filter((n) => n.severity === 'HIGH').length,
+      critical: risks.filter((n) => n.severity === 'CRITICAL').length,
+      high: risks.filter((n) => n.severity === 'HIGH').length,
       total: visible.length,
     };
   }, [filteredNodes, searching, matchIds]);
@@ -212,6 +248,9 @@ function Atlas({ data }: { data: AtlasData }) {
     setSelectedId(node.id);
   }, []);
 
+  const closeDetail = useCallback(() => setSelectedId(null), []);
+  const closeAbout = useCallback(() => setAboutOpen(false), []);
+
   const reset = useCallback(() => {
     setDomain('ALL');
     setSeverity('ALL');
@@ -241,6 +280,7 @@ function Atlas({ data }: { data: AtlasData }) {
         onQuery={setQuery}
         onFit={fit}
         onReset={reset}
+        onAbout={() => setAboutOpen(true)}
         metrics={metrics}
       />
 
@@ -279,10 +319,14 @@ function Atlas({ data }: { data: AtlasData }) {
           visible={metrics.total}
           total={data.nodes.length}
           selectedTitle={selected?.title ?? null}
+          repository={data.meta.repository}
+          license={data.meta.license}
+          onAbout={() => setAboutOpen(true)}
         />
       </main>
 
-      {selected && <DetailPanel node={selected} onClose={() => setSelectedId(null)} />}
+      {selected && <DetailPanel node={selected} data={data} onClose={closeDetail} />}
+      {aboutOpen && <AboutDialog data={data} onClose={closeAbout} />}
     </div>
   );
 }

@@ -60,7 +60,7 @@ function NodeShell({
         selected ? 'ring-2 ring-[var(--atlas-accent)] ring-offset-2 ring-offset-[var(--atlas-bg)]' : ''
       } ${dimmed ? 'opacity-20' : 'opacity-100'}`}
       style={{ borderColor: accent, ...patternStyle }}
-      aria-label={`${KIND_LABEL[atlas.type]}: ${atlas.title}, severity ${SEVERITY_LABEL[atlas.severity]}`}
+      aria-label={`${KIND_LABEL[atlas.type]}: ${atlas.title}, ${atlas.type === 'guardrail' ? 'addresses' : 'severity'} ${SEVERITY_LABEL[atlas.severity]}`}
     >
       <Handle type="target" position={targetPos} className="!h-2 !w-2 !border-0 !bg-[var(--atlas-muted)]" />
       <div className="mb-1.5 flex items-center gap-2">
@@ -79,7 +79,7 @@ function NodeShell({
         <span
           className={`ml-auto rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-wide ${severityClass(atlas.severity)}`}
         >
-          {atlas.severity}
+          {atlas.type === 'guardrail' ? `FOR ${atlas.severity}` : atlas.severity}
         </span>
       </div>
       <div className="text-[13px] font-semibold leading-snug text-[var(--atlas-text)]">{atlas.title}</div>

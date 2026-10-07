@@ -1,0 +1,22 @@
+name: Report a mapping or severity issue
+description: A framework ID, severity rating, or remediation looks wrong.
+labels: ["correction"]
+body:
+  - type: input
+    id: entry
+    attributes:
+      label: Entry link
+      description: Use "Copy link" in the entry's detail panel.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Supporting source
+      description: Link to the official framework page or other evidence.

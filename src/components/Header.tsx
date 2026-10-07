@@ -12,6 +12,7 @@ interface Props {
   onQuery: (q: string) => void;
   onFit: () => void;
   onReset: () => void;
+  onAbout: () => void;
   metrics: { critical: number; high: number; total: number };
 }
 
@@ -35,6 +36,7 @@ export function Header({
   onQuery,
   onFit,
   onReset,
+  onAbout,
   metrics,
 }: Props) {
   return (
@@ -63,7 +65,7 @@ export function Header({
               AI Security Atlas
             </h1>
             <p className="hidden font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase sm:block">
-              Threat → Vulnerability → Guardrail
+              Threat → Vulnerability → Guardrail · independent, not MITRE ATLAS
             </p>
           </div>
         </div>
@@ -163,6 +165,9 @@ export function Header({
           </button>
           <button type="button" className={btnCls} onClick={onReset}>
             Reset
+          </button>
+          <button type="button" className={btnCls} onClick={onAbout}>
+            About &amp; sources
           </button>
         </div>
       </div>
