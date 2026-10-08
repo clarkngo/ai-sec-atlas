@@ -26,7 +26,7 @@ interface Props {
 }
 
 const selectCls =
-  'max-w-[11rem] rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-surface)] px-2 py-1.5 text-xs text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)] sm:max-w-none';
+  'w-full min-w-0 rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-surface)] px-2 py-1.5 text-xs text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)] sm:w-auto sm:max-w-[16rem]';
 
 const btnCls =
   'rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-surface)] px-2.5 py-1.5 text-xs font-medium text-[var(--atlas-muted)] hover:border-[var(--atlas-accent)]/40 hover:text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]';
@@ -190,9 +190,25 @@ export function Header(p: Props) {
           ))}
         </div>
 
+        <div className="ml-auto flex gap-1.5 sm:order-2">
+          {view === 'map' && (
+            <div className="hidden sm:block">
+              <ViewOptions direction={p.direction} onDirection={p.onDirection} onFit={p.onFit} />
+            </div>
+          )}
+          <button type="button" className={btnCls} onClick={p.onGuide}>
+            <span className="sm:hidden">Guide</span>
+            <span className="hidden sm:inline">How to read</span>
+          </button>
+          <button type="button" className={btnCls} onClick={p.onAbout}>
+            <span className="sm:hidden">About</span>
+            <span className="hidden sm:inline">About &amp; sources</span>
+          </button>
+          <SoundToggle />
+        </div>
         {filtering && (
-          <>
-            <label className="flex items-center gap-1.5">
+          <div className="flex w-full min-w-0 items-center gap-2 sm:order-1 sm:w-auto">
+            <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:flex-none">
               <span className="sr-only">Area</span>
               <select
                 className={selectCls}
@@ -226,23 +242,16 @@ export function Header(p: Props) {
             </label>
 
             {filtered && (
-              <button type="button" className={btnCls} onClick={p.onReset}>
-                Clear filters
+              <button type="button" className={btnCls} onClick={p.onReset} title="Clear filters">
+                <span className="sm:hidden" aria-hidden>
+                  ✕
+                </span>
+                <span className="sr-only sm:not-sr-only">Clear filters</span>
               </button>
             )}
-          </>
+          </div>
         )}
 
-        <div className="ml-auto flex gap-1.5">
-          {view === 'map' && <ViewOptions direction={p.direction} onDirection={p.onDirection} onFit={p.onFit} />}
-          <button type="button" className={btnCls} onClick={p.onGuide}>
-            How to read
-          </button>
-          <button type="button" className={btnCls} onClick={p.onAbout}>
-            About &amp; sources
-          </button>
-          <SoundToggle />
-        </div>
       </div>
     </header>
   );

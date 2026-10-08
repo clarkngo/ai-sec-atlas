@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "AI Security Atlas",
-    "datasetVersion": "0.3.0",
+    "datasetVersion": "0.4.0",
     "updated": "2026-10-07",
     "license": "MIT",
     "repository": "https://github.com/clarkngo/ai-sec-atlas",
@@ -19,13 +19,18 @@
   ],
   "references": {
     "ATLAS-AML.M0004": {"source": "mitre-atlas", "code": "AML.M0004", "name": "Limit AI Service Query Volume and Rate", "url": "https://atlas.mitre.org/mitigations/AML.M0004"},
+    "ATLAS-AML.M0005": {"source": "mitre-atlas", "code": "AML.M0005", "name": "Control Access to AI Models and Data at Rest", "url": "https://atlas.mitre.org/mitigations/AML.M0005"},
     "ATLAS-AML.M0007": {"source": "mitre-atlas", "code": "AML.M0007", "name": "Sanitize Training Data", "url": "https://atlas.mitre.org/mitigations/AML.M0007"},
+    "ATLAS-AML.M0008": {"source": "mitre-atlas", "code": "AML.M0008", "name": "Validate AI Model", "url": "https://atlas.mitre.org/mitigations/AML.M0008"},
+    "ATLAS-AML.M0011": {"source": "mitre-atlas", "code": "AML.M0011", "name": "Restrict Library Loading", "url": "https://atlas.mitre.org/mitigations/AML.M0011"},
     "ATLAS-AML.M0013": {"source": "mitre-atlas", "code": "AML.M0013", "name": "Code Signing", "url": "https://atlas.mitre.org/mitigations/AML.M0013"},
     "ATLAS-AML.M0014": {"source": "mitre-atlas", "code": "AML.M0014", "name": "Verify AI Artifacts", "url": "https://atlas.mitre.org/mitigations/AML.M0014"},
     "ATLAS-AML.M0016": {"source": "mitre-atlas", "code": "AML.M0016", "name": "Vulnerability Scanning", "url": "https://atlas.mitre.org/mitigations/AML.M0016"},
+    "ATLAS-AML.M0018": {"source": "mitre-atlas", "code": "AML.M0018", "name": "User Training", "url": "https://atlas.mitre.org/mitigations/AML.M0018"},
     "ATLAS-AML.M0019": {"source": "mitre-atlas", "code": "AML.M0019", "name": "Control Access to AI Models and Data in Production", "url": "https://atlas.mitre.org/mitigations/AML.M0019"},
     "ATLAS-AML.M0020": {"source": "mitre-atlas", "code": "AML.M0020", "name": "Generative AI Guardrails", "url": "https://atlas.mitre.org/mitigations/AML.M0020"},
     "ATLAS-AML.M0023": {"source": "mitre-atlas", "code": "AML.M0023", "name": "AI Bill of Materials", "url": "https://atlas.mitre.org/mitigations/AML.M0023"},
+    "ATLAS-AML.M0024": {"source": "mitre-atlas", "code": "AML.M0024", "name": "AI Telemetry Logging", "url": "https://atlas.mitre.org/mitigations/AML.M0024"},
     "ATLAS-AML.M0025": {"source": "mitre-atlas", "code": "AML.M0025", "name": "Maintain AI Dataset Provenance", "url": "https://atlas.mitre.org/mitigations/AML.M0025"},
     "ATLAS-AML.M0026": {"source": "mitre-atlas", "code": "AML.M0026", "name": "Privileged AI Agent Permissions Configuration", "url": "https://atlas.mitre.org/mitigations/AML.M0026"},
     "ATLAS-AML.M0028": {"source": "mitre-atlas", "code": "AML.M0028", "name": "AI Agent Tools Permissions Configuration", "url": "https://atlas.mitre.org/mitigations/AML.M0028"},
@@ -34,28 +39,40 @@
     "ATLAS-AML.M0031": {"source": "mitre-atlas", "code": "AML.M0031", "name": "Memory Hardening", "url": "https://atlas.mitre.org/mitigations/AML.M0031"},
     "ATLAS-AML.M0032": {"source": "mitre-atlas", "code": "AML.M0032", "name": "Segmentation of AI Agent Components", "url": "https://atlas.mitre.org/mitigations/AML.M0032"},
     "ATLAS-AML.M0033": {"source": "mitre-atlas", "code": "AML.M0033", "name": "Input and Output Validation for AI Agent Components", "url": "https://atlas.mitre.org/mitigations/AML.M0033"},
+    "ATLAS-AML.M0036": {"source": "mitre-atlas", "code": "AML.M0036", "name": "Limit AI Workload Resource Consumption", "url": "https://atlas.mitre.org/mitigations/AML.M0036"},
+    "ATLAS-AML.M0037": {"source": "mitre-atlas", "code": "AML.M0037", "name": "AI Agent Authority Expansion Controls", "url": "https://atlas.mitre.org/mitigations/AML.M0037"},
+    "ATLAS-AML.M0038": {"source": "mitre-atlas", "code": "AML.M0038", "name": "AI Agent Scope Drift Detection", "url": "https://atlas.mitre.org/mitigations/AML.M0038"},
     "ATLAS-AML.T0010": {"source": "mitre-atlas", "code": "AML.T0010", "name": "AI Supply Chain Compromise", "url": "https://atlas.mitre.org/techniques/AML.T0010"},
     "ATLAS-AML.T0011.000": {"source": "mitre-atlas", "code": "AML.T0011.000", "name": "User Execution: Unsafe AI Artifacts", "url": "https://atlas.mitre.org/techniques/AML.T0011.000"},
     "ATLAS-AML.T0018": {"source": "mitre-atlas", "code": "AML.T0018", "name": "Manipulate AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0018"},
     "ATLAS-AML.T0020": {"source": "mitre-atlas", "code": "AML.T0020", "name": "Training Data Poisoning", "url": "https://atlas.mitre.org/techniques/AML.T0020"},
+    "ATLAS-AML.T0024.000": {"source": "mitre-atlas", "code": "AML.T0024.000", "name": "Exfiltration via AI Inference API: Infer Training Data Membership", "url": "https://atlas.mitre.org/techniques/AML.T0024.000"},
+    "ATLAS-AML.T0024.001": {"source": "mitre-atlas", "code": "AML.T0024.001", "name": "Exfiltration via AI Inference API: Invert AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0024.001"},
     "ATLAS-AML.T0024.002": {"source": "mitre-atlas", "code": "AML.T0024.002", "name": "Exfiltration via AI Inference API: Extract AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0024.002"},
     "ATLAS-AML.T0029": {"source": "mitre-atlas", "code": "AML.T0029", "name": "Denial of AI Service", "url": "https://atlas.mitre.org/techniques/AML.T0029"},
     "ATLAS-AML.T0034": {"source": "mitre-atlas", "code": "AML.T0034", "name": "Cost Harvesting", "url": "https://atlas.mitre.org/techniques/AML.T0034"},
     "ATLAS-AML.T0034.002": {"source": "mitre-atlas", "code": "AML.T0034.002", "name": "Cost Harvesting: Agentic Resource Consumption", "url": "https://atlas.mitre.org/techniques/AML.T0034.002"},
     "ATLAS-AML.T0040": {"source": "mitre-atlas", "code": "AML.T0040", "name": "AI Model Inference API Access", "url": "https://atlas.mitre.org/techniques/AML.T0040"},
+    "ATLAS-AML.T0048": {"source": "mitre-atlas", "code": "AML.T0048", "name": "External Harms", "url": "https://atlas.mitre.org/techniques/AML.T0048"},
+    "ATLAS-AML.T0050": {"source": "mitre-atlas", "code": "AML.T0050", "name": "Command and Scripting Interpreter", "url": "https://atlas.mitre.org/techniques/AML.T0050"},
     "ATLAS-AML.T0051": {"source": "mitre-atlas", "code": "AML.T0051", "name": "LLM Prompt Injection", "url": "https://atlas.mitre.org/techniques/AML.T0051"},
     "ATLAS-AML.T0051.001": {"source": "mitre-atlas", "code": "AML.T0051.001", "name": "LLM Prompt Injection: Indirect", "url": "https://atlas.mitre.org/techniques/AML.T0051.001"},
     "ATLAS-AML.T0053": {"source": "mitre-atlas", "code": "AML.T0053", "name": "AI Agent Tool Invocation", "url": "https://atlas.mitre.org/techniques/AML.T0053"},
     "ATLAS-AML.T0054": {"source": "mitre-atlas", "code": "AML.T0054", "name": "LLM Jailbreak", "url": "https://atlas.mitre.org/techniques/AML.T0054"},
     "ATLAS-AML.T0056": {"source": "mitre-atlas", "code": "AML.T0056", "name": "Extract LLM System Prompt", "url": "https://atlas.mitre.org/techniques/AML.T0056"},
     "ATLAS-AML.T0057": {"source": "mitre-atlas", "code": "AML.T0057", "name": "LLM Data Leakage", "url": "https://atlas.mitre.org/techniques/AML.T0057"},
+    "ATLAS-AML.T0060": {"source": "mitre-atlas", "code": "AML.T0060", "name": "Publish Hallucinated Entities", "url": "https://atlas.mitre.org/techniques/AML.T0060"},
+    "ATLAS-AML.T0062": {"source": "mitre-atlas", "code": "AML.T0062", "name": "Discover LLM Hallucinations", "url": "https://atlas.mitre.org/techniques/AML.T0062"},
+    "ATLAS-AML.T0067": {"source": "mitre-atlas", "code": "AML.T0067", "name": "LLM Trusted Output Components Manipulation", "url": "https://atlas.mitre.org/techniques/AML.T0067"},
     "ATLAS-AML.T0070": {"source": "mitre-atlas", "code": "AML.T0070", "name": "RAG Poisoning", "url": "https://atlas.mitre.org/techniques/AML.T0070"},
     "ATLAS-AML.T0073": {"source": "mitre-atlas", "code": "AML.T0073", "name": "Impersonation", "url": "https://atlas.mitre.org/techniques/AML.T0073"},
     "ATLAS-AML.T0077": {"source": "mitre-atlas", "code": "AML.T0077", "name": "LLM Response Rendering", "url": "https://atlas.mitre.org/techniques/AML.T0077"},
     "ATLAS-AML.T0080.000": {"source": "mitre-atlas", "code": "AML.T0080.000", "name": "AI Agent Context Poisoning: Memory", "url": "https://atlas.mitre.org/techniques/AML.T0080.000"},
+    "ATLAS-AML.T0081": {"source": "mitre-atlas", "code": "AML.T0081", "name": "Modify AI Agent Configuration", "url": "https://atlas.mitre.org/techniques/AML.T0081"},
     "ATLAS-AML.T0082": {"source": "mitre-atlas", "code": "AML.T0082", "name": "RAG Credential Harvesting", "url": "https://atlas.mitre.org/techniques/AML.T0082"},
     "ATLAS-AML.T0083": {"source": "mitre-atlas", "code": "AML.T0083", "name": "Credentials from AI Agent Configuration", "url": "https://atlas.mitre.org/techniques/AML.T0083"},
     "ATLAS-AML.T0085.000": {"source": "mitre-atlas", "code": "AML.T0085.000", "name": "Data from AI Services: RAG Databases", "url": "https://atlas.mitre.org/techniques/AML.T0085.000"},
+    "ATLAS-AML.T0103": {"source": "mitre-atlas", "code": "AML.T0103", "name": "Deploy AI Agent", "url": "https://atlas.mitre.org/techniques/AML.T0103"},
     "ATLAS-AML.T0105": {"source": "mitre-atlas", "code": "AML.T0105", "name": "Escape to Host", "url": "https://atlas.mitre.org/techniques/AML.T0105"},
     "ATLAS-AML.T0110": {"source": "mitre-atlas", "code": "AML.T0110", "name": "AI Agent Tool Poisoning", "url": "https://atlas.mitre.org/techniques/AML.T0110"},
     "ATLAS-AML.T0118": {"source": "mitre-atlas", "code": "AML.T0118", "name": "Autonomous AI Agent Communication", "url": "https://atlas.mitre.org/techniques/AML.T0118"},
@@ -63,12 +80,16 @@
     "NIST-MANAGE-2.4": {"source": "nist-ai-rmf", "code": "MANAGE 2.4", "name": "Mechanisms exist to supersede, disengage, or deactivate AI systems", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MANAGE-3.1": {"source": "nist-ai-rmf", "code": "MANAGE 3.1", "name": "Third-party AI risks are monitored and controls applied", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MANAGE-3.2": {"source": "nist-ai-rmf", "code": "MANAGE 3.2", "name": "Pre-trained models are monitored as part of regular maintenance", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
+    "NIST-MANAGE-4.1": {"source": "nist-ai-rmf", "code": "MANAGE 4.1", "name": "Post-deployment monitoring, incident response, and change management", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MAP-4.1": {"source": "nist-ai-rmf", "code": "MAP 4.1", "name": "Risks of AI components, including third-party data and software, are mapped", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MAP-4.2": {"source": "nist-ai-rmf", "code": "MAP 4.2", "name": "Internal risk controls for AI components are identified and documented", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MEASURE-2.10": {"source": "nist-ai-rmf", "code": "MEASURE 2.10", "name": "Privacy risk of the AI system is examined and documented", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MEASURE-2.4": {"source": "nist-ai-rmf", "code": "MEASURE 2.4", "name": "AI system functionality and behavior are monitored in production", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
+    "NIST-MEASURE-2.5": {"source": "nist-ai-rmf", "code": "MEASURE 2.5", "name": "AI system is demonstrated to be valid and reliable", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MEASURE-2.6": {"source": "nist-ai-rmf", "code": "MEASURE 2.6", "name": "AI system is evaluated regularly for safety risks", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "NIST-MEASURE-2.7": {"source": "nist-ai-rmf", "code": "MEASURE 2.7", "name": "AI system security and resilience are evaluated and documented", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
+    "NIST-MEASURE-2.8": {"source": "nist-ai-rmf", "code": "MEASURE 2.8", "name": "Transparency and accountability risks are examined and documented", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
+    "NIST-MEASURE-2.9": {"source": "nist-ai-rmf", "code": "MEASURE 2.9", "name": "Model is explained and output is interpreted within its context", "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/"},
     "OWASP-ASI01": {"source": "owasp-asi", "code": "ASI01:2026", "name": "Agent Goal Hijack", "url": "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"},
     "OWASP-ASI02": {"source": "owasp-asi", "code": "ASI02:2026", "name": "Tool Misuse and Exploitation", "url": "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"},
     "OWASP-ASI03": {"source": "owasp-asi", "code": "ASI03:2026", "name": "Identity and Privilege Abuse", "url": "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"},
@@ -98,11 +119,11 @@
     "Multi-Agent & Memory Trust"
   ],
   "domainInfo": {
-    "Autonomous Agent & MCP Security": {"summary": "Agents that call tools on your behalf: what happens when an attacker steers which tool runs and with what arguments."},
-    "RAG & Knowledge Retrieval Security": {"summary": "Chatbots that answer from your documents: poisoned sources, injected instructions, and answers that leak files users shouldn't see."},
-    "Model Supply Chain & Training Integrity": {"summary": "Where your model and data come from: poisoned training sets, malicious model files, and stolen model behavior."},
-    "LLM Application & Output Security": {"summary": "The app around the model: leaked system prompts, jailbreaks, and output that steals data when the browser renders it."},
-    "Multi-Agent & Memory Trust": {"summary": "Agents that remember and talk to each other: poisoned memory, tampered tool definitions, and agents posing as other agents."}
+    "Autonomous Agent & MCP Security": {"summary": "Agents that call tools and run code on your behalf: hijacked tool calls, code execution, manipulated human approvals, and agents that go rogue."},
+    "RAG & Knowledge Retrieval Security": {"summary": "Chatbots that answer from your documents: poisoned sources, injected instructions, leaked files, and embeddings that give away their source text."},
+    "Model Supply Chain & Training Integrity": {"summary": "Where your model, data, and code come from: poisoned training sets, malicious model files, hallucinated packages, and memorized secrets."},
+    "LLM Application & Output Security": {"summary": "The app around the model: leaked prompts, jailbreaks, data-stealing output, confident wrong answers, and runaway costs."},
+    "Multi-Agent & Memory Trust": {"summary": "Agents that remember and talk to each other: poisoned memory, tampered tools, impersonation, and failures that cascade."}
   },
   "paths": [
     {
@@ -145,6 +166,33 @@
         {"node": "g-model-signing", "note": "Fix: promote only signed, hash-pinned artifacts with a bill of materials."},
         {"node": "t-data-poison", "note": "Fine-tuning data can also plant hidden behavior."},
         {"node": "g-data-provenance", "note": "Fix: track where every dataset came from and screen it before training."}
+      ]
+    },
+    {
+      "id": "agent-control",
+      "title": "Keeping an autonomous agent under control",
+      "summary": "For teams letting agents run code or take actions. Covers code execution, human approvals, and stopping an agent that goes wrong.",
+      "steps": [
+        {"node": "t-agent-rce", "note": "Agents that can run code turn a prompt injection into remote code execution."},
+        {"node": "v-dynamic-exec", "note": "The root cause is running model-generated code where secrets and the network are reachable."},
+        {"node": "g-sandboxed-exec", "note": "Fix: run generated code in a throwaway sandbox with no credentials and no outbound network."},
+        {"node": "t-approval-manipulation", "note": "Human approval is the next line of defense, but a steered agent can talk reviewers into saying yes."},
+        {"node": "g-verifiable-approval", "note": "Fix: show reviewers the exact action and its effect, generated by the system rather than the agent."},
+        {"node": "t-rogue-agent", "note": "If an agent is compromised anyway, the question becomes how fast you notice and stop it."},
+        {"node": "g-kill-switch", "note": "Fix: log every step, detect scope drift, and keep a tested kill switch."}
+      ]
+    },
+    {
+      "id": "trustworthy-answers",
+      "title": "Shipping answers people can trust",
+      "summary": "For teams whose users act on AI answers. Covers hallucinations, overreliance, and the attacks that exploit them.",
+      "steps": [
+        {"node": "t-hallucination-reliance", "note": "The model will sometimes state false things confidently, and users may act on them."},
+        {"node": "v-ungrounded-answers", "note": "This is worst when answers come from model memory with nothing to check them against."},
+        {"node": "g-grounding-verification", "note": "Fix: answer from trusted sources and verify every citation before showing it."},
+        {"node": "g-uncertainty-review", "note": "Fix: label AI output and send high-stakes questions to a human."},
+        {"node": "t-slopsquatting", "note": "Attackers also exploit hallucinations directly, by registering package names that assistants invent."},
+        {"node": "g-dependency-allowlist", "note": "Fix: install only from an approved registry so invented names cannot resolve to malware."}
       ]
     }
   ],
@@ -443,7 +491,7 @@
         "likelihood": "HIGH",
         "rationale": "Impact medium: enables injection but does not by itself grant privileges. Likelihood high: raw chunk concatenation is the default pattern."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM08", "ATLAS-AML.T0051.001", "NIST-MEASURE-2.7"],
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM08", "OWASP-ASI01", "ATLAS-AML.T0051.001", "NIST-MEASURE-2.7"],
       "impact": "Untrusted document content is interpreted as higher-privilege instructions.",
       "remediation": [
         "Normalize encodings and strip HTML/script before chunking.",
@@ -1196,6 +1244,633 @@
         "Delegation audit reconstructs the full chain for any task."
       ],
       "codeExample": "verifyEnvelope(msg, { audience: SELF_ID, maxAgeSec: 60 });"
+    },
+    {
+      "id": "t-hallucination-reliance",
+      "type": "threat",
+      "title": "Hallucinated Answers Acted On",
+      "summary": "Users or downstream systems act on fabricated facts, citations, or policies the model states with confidence.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: courts and regulators have held operators liable for chatbot statements. Likelihood medium: harm requires someone to act on an unverified answer in a consequential setting."
+      },
+      "impact": "Wrong decisions with legal, financial, or safety consequences; the operator can be held liable for what its chatbot said.",
+      "remediation": [
+        "Ground answers in retrieved, trusted sources and show the citations.",
+        "Route high-stakes topics (legal, medical, financial, policy) to human review.",
+        "State the system's limits in the interface, not only in the terms of service."
+      ],
+      "verification": [
+        "Track factual accuracy on a labeled question set for every release.",
+        "Spot-check production answers in high-stakes categories each week."
+      ],
+      "frameworks": ["OWASP-LLM09", "ATLAS-AML.T0048", "NIST-MEASURE-2.5", "NIST-MEASURE-2.9"]
+    },
+    {
+      "id": "v-ungrounded-answers",
+      "type": "vulnerability",
+      "title": "Ungrounded, Unverified Answers",
+      "summary": "Responses are generated from model memory alone, with no retrieval, citation, or check that cited sources exist and support the claim.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "MEDIUM",
+        "likelihood": "HIGH",
+        "rationale": "Impact medium: errors are harmful only when relied on. Likelihood high: every model hallucinates, and many apps answer without grounding."
+      },
+      "impact": "Fabricated facts and citations reach users with nothing to catch them.",
+      "remediation": [
+        "Answer from retrieved documents and require a citation for each factual claim.",
+        "Verify that cited documents exist and contain the cited passage.",
+        "Let the model say it does not know; reward abstention in evals."
+      ],
+      "verification": [
+        "Citation checker rejects answers whose quotes are absent from the source.",
+        "Measure unsupported-claim rate on a held-out question set."
+      ],
+      "codeExample": "const ok = claims.every(c => sources[c.ref]?.text.includes(c.quote));\nif (!ok) return abstain('unsupported claim');",
+      "frameworks": ["OWASP-LLM09", "ATLAS-AML.T0062", "NIST-MEASURE-2.5"]
+    },
+    {
+      "id": "v-overreliance-ui",
+      "type": "vulnerability",
+      "title": "Interface Invites Overreliance",
+      "summary": "The product presents AI output as authoritative: no uncertainty cues, no labels, no prompt to verify before acting.",
+      "domain": "LLM Application & Output Security",
+      "severity": "MEDIUM",
+      "risk": {
+        "impact": "MEDIUM",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact medium: amplifies other errors rather than causing them. Likelihood medium: many products now label AI output, but few add friction before action."
+      },
+      "impact": "Users skip verification because the interface signals that none is needed.",
+      "remediation": [
+        "Label AI-generated content and show its sources inline.",
+        "Surface confidence or coverage signals where they are meaningful.",
+        "Add friction (confirm, review) before users act on high-stakes answers."
+      ],
+      "verification": [
+        "Usability tests check whether users notice and open citations.",
+        "Every AI answer surface carries an AI-generated label."
+      ],
+      "frameworks": ["OWASP-LLM09", "OWASP-ASI09", "NIST-MEASURE-2.8", "NIST-MEASURE-2.9"]
+    },
+    {
+      "id": "g-grounding-verification",
+      "type": "guardrail",
+      "title": "Grounding & Citation Verification",
+      "summary": "Answers are built from retrieved sources, each claim carries a citation, and citations are checked before the answer is shown.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "impact": "Turns silent hallucinations into visible abstentions or checkable claims.",
+      "remediation": [
+        "Retrieve from a curated, versioned knowledge base.",
+        "Check that every citation resolves and supports its claim.",
+        "Prefer 'I don't know' over an unsupported answer."
+      ],
+      "verification": [
+        "Accuracy and citation-validity metrics gate each release.",
+        "Fabricated-citation fixtures are rejected by the checker."
+      ],
+      "frameworks": ["OWASP-LLM09", "ATLAS-AML.M0020", "ATLAS-AML.M0008", "NIST-MEASURE-2.5"]
+    },
+    {
+      "id": "g-uncertainty-review",
+      "type": "guardrail",
+      "title": "Uncertainty Labeling & High-Stakes Review",
+      "summary": "AI output is labeled, limits are stated where users decide, and answers in high-stakes categories go to a trained reviewer.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "impact": "Keeps people from acting on unverified output where errors are costly.",
+      "remediation": [
+        "Classify questions by stakes and route the top tier to human review.",
+        "Show sources and an AI-generated label on every answer.",
+        "Train staff on the system's known failure modes."
+      ],
+      "verification": [
+        "Review queue SLAs are met for high-stakes categories.",
+        "Audit a sample of auto-answered questions for misrouted high-stakes items."
+      ],
+      "frameworks": ["OWASP-LLM09", "OWASP-ASI09", "ATLAS-AML.M0018", "NIST-MEASURE-2.9", "NIST-MANAGE-4.1"]
+    },
+    {
+      "id": "t-denial-of-wallet",
+      "type": "threat",
+      "title": "Denial of Wallet & Resource Exhaustion",
+      "summary": "Floods of requests, oversized inputs, or deliberately expensive prompts drive up inference cost or take the service down.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "MEDIUM",
+        "likelihood": "HIGH",
+        "rationale": "Impact medium: financial and availability loss, usually recoverable. Likelihood high: pay-per-token endpoints are cheap to abuse and easy to find."
+      },
+      "impact": "Unplanned cloud bills, degraded service for legitimate users, or a full outage.",
+      "remediation": [
+        "Cap input size, output tokens, and execution time per request.",
+        "Apply per-user and per-tenant quotas with budget alerts.",
+        "Degrade gracefully (shorter answers, queueing) instead of failing outright."
+      ],
+      "verification": [
+        "Load-test with oversized and adversarially expensive prompts.",
+        "Confirm budget alerts fire before spend exceeds the monthly cap."
+      ],
+      "frameworks": ["OWASP-LLM10", "ATLAS-AML.T0034", "ATLAS-AML.T0029", "NIST-MEASURE-2.7"]
+    },
+    {
+      "id": "v-no-resource-limits",
+      "type": "vulnerability",
+      "title": "No Per-Request Resource Limits",
+      "summary": "Requests can use unlimited context, output tokens, tool calls, or wall-clock time, and spend is not tracked per caller.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "MEDIUM",
+        "likelihood": "HIGH",
+        "rationale": "Impact medium: enables cost and availability attacks. Likelihood high: default SDK settings rarely set budgets."
+      },
+      "impact": "A single caller can consume capacity and budget meant for everyone.",
+      "remediation": [
+        "Set max input tokens, max output tokens, and timeouts on every call.",
+        "Meter spend per key, user, and tenant.",
+        "Limit queued and concurrent actions per session."
+      ],
+      "verification": [
+        "Requests over the limit are rejected with a clear error.",
+        "Dashboards show per-tenant spend with anomaly alerts."
+      ],
+      "codeExample": "llm.create({ input, max_tokens: 1024, timeout_ms: 20000 });\nmeter.charge(tenant, usage.total_tokens);",
+      "frameworks": ["OWASP-LLM10", "ATLAS-AML.T0034", "NIST-MEASURE-2.4"]
+    },
+    {
+      "id": "g-resource-budgets",
+      "type": "guardrail",
+      "title": "Resource Budgets, Timeouts & Graceful Degradation",
+      "summary": "Every request, session, and tenant runs within explicit token, time, and spend budgets, with a degraded mode under load.",
+      "domain": "LLM Application & Output Security",
+      "severity": "HIGH",
+      "impact": "Bounds the cost and blast radius of abuse and of runaway legitimate use.",
+      "remediation": [
+        "Define budgets per request, session, user, and tenant.",
+        "Alert on spend velocity, not only totals.",
+        "Fall back to cheaper models or queueing when budgets tighten."
+      ],
+      "verification": [
+        "Chaos tests confirm degraded mode keeps core flows available.",
+        "Budget breaches page on-call before the monthly cap."
+      ],
+      "frameworks": ["OWASP-LLM10", "ATLAS-AML.M0036", "ATLAS-AML.M0004", "NIST-MEASURE-2.4", "NIST-MANAGE-2.4"]
+    },
+    {
+      "id": "t-slopsquatting",
+      "type": "threat",
+      "title": "Hallucinated Package Squatting",
+      "summary": "Attackers register package names that coding assistants hallucinate, so developers or agents that install the suggestion pull in malware.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: code execution in development and CI. Likelihood medium: OWASP lists it as an attack scenario and attackers have registered hallucinated names, but it requires installing an unvetted suggestion."
+      },
+      "impact": "Malicious code runs on developer machines and in CI with access to source and secrets.",
+      "remediation": [
+        "Install only from an allowlist or internal mirror.",
+        "Check package age, maintainers, and download history before first use.",
+        "Block agents from installing packages without approval."
+      ],
+      "verification": [
+        "Ask assistants for packages in an internal benchmark and confirm unknown names are blocked.",
+        "CI fails on dependencies outside the allowlist."
+      ],
+      "frameworks": ["OWASP-LLM09", "OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0062", "ATLAS-AML.T0060", "NIST-MAP-4.1"]
+    },
+    {
+      "id": "v-unvetted-ai-code",
+      "type": "vulnerability",
+      "title": "Unreviewed AI-Suggested Code & Dependencies",
+      "summary": "Developers or coding agents adopt generated code and suggested packages without review, scanning, or provenance checks.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: vulnerabilities and malware reach production. Likelihood medium: most teams review code, but agent-authored changes and quick installs often skip it."
+      },
+      "impact": "Insecure patterns and malicious dependencies enter the codebase through trusted tooling.",
+      "remediation": [
+        "Require code review for AI-generated changes like any other change.",
+        "Run dependency and static analysis on every pull request.",
+        "Record which changes were AI-assisted for later audit."
+      ],
+      "verification": [
+        "PRs adding new dependencies require an approval from a code owner.",
+        "SAST and SCA run on all branches, including agent-authored ones."
+      ],
+      "frameworks": ["OWASP-LLM09", "OWASP-LLM05", "OWASP-ASI05", "ATLAS-AML.T0060", "NIST-MANAGE-3.1"]
+    },
+    {
+      "id": "g-dependency-allowlist",
+      "type": "guardrail",
+      "title": "Dependency Allowlisting & Package Verification",
+      "summary": "New packages must come from an approved registry or mirror and pass provenance, age, and malware checks before install.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "impact": "Hallucinated or typo-squatted names cannot be installed by people or agents.",
+      "remediation": [
+        "Mirror approved packages internally and point package managers at the mirror.",
+        "Require lockfiles with hashes.",
+        "Scan new packages for install scripts and known malware."
+      ],
+      "verification": [
+        "Installing an unknown package from a fresh checkout fails.",
+        "Lockfile hash mismatches fail the build."
+      ],
+      "codeExample": "npm config set registry https://registry.internal.example/\nnpm ci --ignore-scripts",
+      "frameworks": ["OWASP-LLM03", "OWASP-LLM09", "ATLAS-AML.M0016", "ATLAS-AML.M0011", "NIST-MANAGE-3.1"]
+    },
+    {
+      "id": "t-training-data-leak",
+      "type": "threat",
+      "title": "Training Data Memorization Leakage",
+      "summary": "The model reproduces personal data, secrets, or confidential text it memorized during training or fine-tuning.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: regulated data disclosure. Likelihood medium: memorization is documented, but extracting specific records takes effort."
+      },
+      "impact": "Privacy breaches and secret exposure that cannot be fixed by access controls, because the data lives in the weights.",
+      "remediation": [
+        "Scrub PII and secrets from training and fine-tuning data.",
+        "Deduplicate data; repeated records are memorized far more often.",
+        "Test released models with extraction prompts and canaries."
+      ],
+      "verification": [
+        "Planted canary strings in training data are not reproducible by the released model.",
+        "Membership-inference tests stay near chance on held-out records."
+      ],
+      "frameworks": ["OWASP-LLM02", "ATLAS-AML.T0057", "ATLAS-AML.T0024.000", "NIST-MEASURE-2.10"]
+    },
+    {
+      "id": "v-unscrubbed-finetune",
+      "type": "vulnerability",
+      "title": "Unscrubbed Fine-Tuning Data",
+      "summary": "Support tickets, chat logs, or code used for fine-tuning still contain names, credentials, and confidential details.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: personal and secret data enters the weights. Likelihood medium: many teams scrub, but internal logs are often assumed safe."
+      },
+      "impact": "Sensitive records become part of the model and can resurface in any user's session.",
+      "remediation": [
+        "Run PII and secret detectors over every training shard.",
+        "Prefer synthetic or redacted data for fine-tuning.",
+        "Keep a data inventory linking each model to the datasets it saw."
+      ],
+      "verification": [
+        "Data pipeline blocks shards with detector hits above threshold.",
+        "Model card lists datasets and their scrubbing status."
+      ],
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM04", "ATLAS-AML.T0057", "NIST-MEASURE-2.10", "NIST-MAP-4.1"]
+    },
+    {
+      "id": "g-training-data-scrubbing",
+      "type": "guardrail",
+      "title": "PII Scrubbing & Privacy-Preserving Training",
+      "summary": "Training data is scrubbed and deduplicated, sensitive sets use differential privacy, and models are tested for memorization before release.",
+      "domain": "Model Supply Chain & Training Integrity",
+      "severity": "HIGH",
+      "impact": "Reduces what the model can memorize and catches leakage before release.",
+      "remediation": [
+        "Redact PII and secrets with typed placeholders before training.",
+        "Deduplicate at document and near-duplicate level.",
+        "Use differentially private fine-tuning for sensitive datasets."
+      ],
+      "verification": [
+        "Canary extraction tests run as a release gate.",
+        "Scrubbing reports are archived with each dataset version."
+      ],
+      "frameworks": ["OWASP-LLM02", "ATLAS-AML.M0007", "ATLAS-AML.M0008", "NIST-MEASURE-2.10"]
+    },
+    {
+      "id": "t-embedding-inversion",
+      "type": "threat",
+      "title": "Embedding Inversion & Membership Inference",
+      "summary": "An attacker with access to stored vectors reconstructs the source text or learns whether a specific record is in the index.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "MEDIUM",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "LOW",
+        "rationale": "Impact high: source text can be recovered. Likelihood low: requires access to raw vectors, which are not usually exposed."
+      },
+      "impact": "Confidential document content is recovered from data that teams assumed was anonymized.",
+      "remediation": [
+        "Treat embeddings with the same classification as their source documents.",
+        "Never return raw vectors through public APIs.",
+        "Restrict and log direct access to the vector store."
+      ],
+      "verification": [
+        "Attempt inversion on a sample of stored vectors in a red-team exercise.",
+        "Confirm API responses contain no raw embedding arrays."
+      ],
+      "frameworks": ["OWASP-LLM08", "OWASP-LLM02", "ATLAS-AML.T0024.001", "ATLAS-AML.T0024.000", "NIST-MEASURE-2.10"]
+    },
+    {
+      "id": "v-raw-embeddings-exposed",
+      "type": "vulnerability",
+      "title": "Embeddings Treated as Non-Sensitive",
+      "summary": "Vectors are exported, cached, logged, or shared with vendors under the assumption that embeddings reveal nothing about their source.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "MEDIUM",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "LOW",
+        "rationale": "Impact high: hidden copies of sensitive data. Likelihood low: exploiting it still needs access and an inversion model."
+      },
+      "impact": "Copies of sensitive content spread outside the controls applied to the original documents.",
+      "remediation": [
+        "Classify vector stores at the level of their most sensitive source.",
+        "Encrypt vectors at rest and restrict exports.",
+        "Include vector stores in data-retention and deletion workflows."
+      ],
+      "verification": [
+        "Data inventory lists every vector store and its classification.",
+        "Deleting a source document removes its vectors within the retention SLA."
+      ],
+      "frameworks": ["OWASP-LLM08", "ATLAS-AML.T0024.001", "NIST-MEASURE-2.10"]
+    },
+    {
+      "id": "g-embedding-protection",
+      "type": "guardrail",
+      "title": "Protect Embeddings as Sensitive Data",
+      "summary": "Vector stores inherit source-document classification, access controls, encryption, retention, and audit logging.",
+      "domain": "RAG & Knowledge Retrieval Security",
+      "severity": "MEDIUM",
+      "impact": "Removes the gap between how documents and their embeddings are protected.",
+      "remediation": [
+        "Apply the same ACLs to vectors as to documents.",
+        "Encrypt at rest; disable bulk export by default.",
+        "Log and alert on unusual vector reads."
+      ],
+      "verification": [
+        "Access reviews include vector stores.",
+        "Bulk-export attempts by non-admin roles are denied and logged."
+      ],
+      "frameworks": ["OWASP-LLM08", "OWASP-LLM02", "ATLAS-AML.M0005", "ATLAS-AML.M0019", "NIST-MEASURE-2.10"]
+    },
+    {
+      "id": "t-agent-rce",
+      "type": "threat",
+      "title": "Prompt-to-Code Execution in Agents",
+      "summary": "Injected instructions make an agent write and run code, shell commands, or package installs on infrastructure it can reach.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "CRITICAL",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "HIGH",
+        "rationale": "Impact high: host and credential compromise. Likelihood high: coding and ops agents run code by design, and injection paths are common."
+      },
+      "impact": "Remote code execution through natural language, often with the agent's credentials and network access.",
+      "remediation": [
+        "Run generated code only in an isolated, ephemeral sandbox.",
+        "Ban eval/exec on model output in the agent's own process.",
+        "Require approval for package installs and elevated runs."
+      ],
+      "verification": [
+        "Red-team with injection payloads that request shell access or package installs.",
+        "Confirm sandbox escapes are blocked and logged."
+      ],
+      "frameworks": ["OWASP-ASI05", "OWASP-LLM01", "OWASP-LLM05", "ATLAS-AML.T0050", "ATLAS-AML.T0053", "ATLAS-AML.T0105", "NIST-MEASURE-2.7"]
+    },
+    {
+      "id": "g-sandboxed-exec",
+      "type": "guardrail",
+      "title": "Hardened Execution Sandbox",
+      "summary": "Agent-generated code runs in ephemeral, network-restricted containers with no secrets, resource limits, and approval for elevated actions.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "CRITICAL",
+      "impact": "Contains code execution so a successful injection cannot reach the host, secrets, or internal network.",
+      "remediation": [
+        "Use a fresh container or microVM per run; destroy it afterward.",
+        "Mount no credentials; deny network egress unless allowlisted.",
+        "Allowlist packages and require approval for anything else."
+      ],
+      "verification": [
+        "Escape payloads (env dump, metadata service, socket open) fail inside the sandbox.",
+        "Sandbox images are rebuilt and scanned on a schedule."
+      ],
+      "codeExample": "await sandbox.run(code, { network: 'deny', mounts: [], cpu: 1, memoryMb: 512, timeoutMs: 10000 });",
+      "frameworks": ["OWASP-ASI05", "OWASP-LLM06", "ATLAS-AML.M0032", "ATLAS-AML.M0029", "NIST-MEASURE-2.7"]
+    },
+    {
+      "id": "t-approval-manipulation",
+      "type": "threat",
+      "title": "Human Approval Manipulation",
+      "summary": "A steered agent describes a harmful action in reassuring terms, or floods reviewers with requests, so a human approves it.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: defeats the main human control on agents. Likelihood medium: requires the agent to be steered and the reviewer to rely on its summary."
+      },
+      "impact": "Human-in-the-loop controls approve the very actions they were meant to stop.",
+      "remediation": [
+        "Show approvers the actual action, not the agent's description of it.",
+        "Rate-limit approval requests and batch low-risk ones.",
+        "Require a second reviewer for irreversible actions."
+      ],
+      "verification": [
+        "Red-team with misleading summaries and measure approval rate.",
+        "Track approval latency and volume per reviewer for fatigue signals."
+      ],
+      "frameworks": ["OWASP-ASI09", "OWASP-LLM09", "OWASP-LLM01", "ATLAS-AML.T0067", "NIST-MEASURE-2.8"]
+    },
+    {
+      "id": "v-summary-only-approval",
+      "type": "vulnerability",
+      "title": "Approvals Based on Agent-Written Summaries",
+      "summary": "The approval screen shows the agent's own explanation of what it will do instead of the exact tool, arguments, and effect.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: approvals become rubber stamps. Likelihood medium: common in early agent products, less so where approvals show raw actions."
+      },
+      "impact": "Reviewers cannot see the action they are approving, so persuasion beats verification.",
+      "remediation": [
+        "Render tool name, arguments, and a diff from system data, not model text.",
+        "Highlight irreversible and high-impact fields.",
+        "Log what the reviewer saw alongside the decision."
+      ],
+      "verification": [
+        "Approval UI snapshot tests show raw arguments for every tool.",
+        "Audit log stores the rendered approval view."
+      ],
+      "frameworks": ["OWASP-ASI09", "OWASP-LLM06", "NIST-MEASURE-2.8"]
+    },
+    {
+      "id": "g-verifiable-approval",
+      "type": "guardrail",
+      "title": "Verifiable Action Previews for Approvers",
+      "summary": "Approval requests show system-generated previews of the exact action and its effect, with forced confirmation for sensitive actions.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "impact": "Makes human oversight meaningful: reviewers judge the action, not the agent's pitch.",
+      "remediation": [
+        "Generate previews (diffs, recipients, amounts) from the tool layer.",
+        "Require typed confirmation for irreversible actions.",
+        "Cap approvals per reviewer per hour and escalate the rest."
+      ],
+      "verification": [
+        "Misleading-summary red-team set shows a lower approval rate after rollout.",
+        "Sensitive actions cannot complete without forced confirmation."
+      ],
+      "frameworks": ["OWASP-ASI09", "ATLAS-AML.M0029", "NIST-MEASURE-2.8"]
+    },
+    {
+      "id": "t-rogue-agent",
+      "type": "threat",
+      "title": "Rogue or Compromised Agent",
+      "summary": "An agent whose configuration, memory, or instructions were tampered with keeps acting outside its mission, persisting or spreading to other systems.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: sustained misuse of agent privileges. Likelihood medium: needs a prior compromise, but ATLAS documents real cases of tampered agent code."
+      },
+      "impact": "Ongoing unauthorized actions that look like normal agent activity until someone notices.",
+      "remediation": [
+        "Monitor agent actions against declared scope in real time.",
+        "Make agent configuration immutable and signed in production.",
+        "Keep a tested way to halt every instance and revoke its credentials."
+      ],
+      "verification": [
+        "Tamper with a staging agent's config and confirm detection and halt.",
+        "Run kill-switch drills and time full revocation."
+      ],
+      "frameworks": ["OWASP-ASI10", "OWASP-LLM06", "ATLAS-AML.T0081", "ATLAS-AML.T0103", "NIST-MANAGE-2.4"]
+    },
+    {
+      "id": "v-no-kill-switch",
+      "type": "vulnerability",
+      "title": "No Behavioral Monitoring or Kill Switch",
+      "summary": "Agent actions are not logged step by step, drift from scope is not detected, and there is no fast way to stop agents or revoke their access.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: no containment once something goes wrong. Likelihood medium: many deployments log outputs but not intermediate steps."
+      },
+      "impact": "Misbehaving agents run until a human happens to notice the damage.",
+      "remediation": [
+        "Log every plan, tool call, and result with agent identity.",
+        "Alert on actions outside the agent's declared scope.",
+        "Build one control that stops all instances and revokes tokens."
+      ],
+      "verification": [
+        "Telemetry covers every tool call in sampled sessions.",
+        "Kill switch halts all instances within the target time in drills."
+      ],
+      "codeExample": "if (!scope.allows(action)) { alert('scope-drift', action); return killSwitch.halt(agent.id); }",
+      "frameworks": ["OWASP-ASI10", "ATLAS-AML.T0081", "NIST-MANAGE-2.4", "NIST-MANAGE-4.1"]
+    },
+    {
+      "id": "g-kill-switch",
+      "type": "guardrail",
+      "title": "Agent Behavioral Monitoring & Kill Switch",
+      "summary": "Step-level telemetry, scope-drift detection, and a tested kill switch that halts agents and revokes their credentials.",
+      "domain": "Autonomous Agent & MCP Security",
+      "severity": "HIGH",
+      "impact": "Bounds how long a drifting or compromised agent can act.",
+      "remediation": [
+        "Stream agent telemetry to the SIEM with agent and session IDs.",
+        "Compare each action to the authorized objective and scope.",
+        "Block agents from granting themselves new permissions."
+      ],
+      "verification": [
+        "Scope-drift fixtures trigger alerts in staging.",
+        "Quarterly kill-switch drill results are recorded."
+      ],
+      "frameworks": ["OWASP-ASI10", "OWASP-ASI01", "ATLAS-AML.M0024", "ATLAS-AML.M0038", "ATLAS-AML.M0037", "NIST-MANAGE-2.4", "NIST-MANAGE-4.1"]
+    },
+    {
+      "id": "t-cascading-failure",
+      "type": "threat",
+      "title": "Cascading Multi-Agent Failure",
+      "summary": "One agent's bad output, compromise, or error propagates through delegations and shared state, amplifying across the system.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: system-wide failure from one fault. Likelihood medium: grows with the number of chained agents."
+      },
+      "impact": "A single fault becomes a system-wide incident, with each agent faithfully acting on bad input.",
+      "remediation": [
+        "Validate inputs between agents as untrusted data.",
+        "Isolate credentials and resources per agent.",
+        "Add circuit breakers that stop fan-out on error spikes."
+      ],
+      "verification": [
+        "Inject a faulty agent in staging and measure blast radius.",
+        "Confirm breakers trip before downstream agents act on bad output."
+      ],
+      "frameworks": ["OWASP-ASI08", "OWASP-LLM06", "ATLAS-AML.T0034.002", "NIST-MANAGE-2.4", "NIST-MEASURE-2.6"]
+    },
+    {
+      "id": "v-no-blast-radius",
+      "type": "vulnerability",
+      "title": "No Isolation Between Agents",
+      "summary": "Agents trust each other's outputs, share credentials or memory, and keep running when upstream agents misbehave.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "risk": {
+        "impact": "HIGH",
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: faults spread unchecked. Likelihood medium: common in prototypes, less so in hardened systems."
+      },
+      "impact": "There is no boundary where a fault can be stopped.",
+      "remediation": [
+        "Give each agent its own identity, credentials, and quotas.",
+        "Validate and schema-check every inter-agent message.",
+        "Define failure modes: halt, retry, or escalate."
+      ],
+      "verification": [
+        "Architecture review shows no shared long-lived credentials.",
+        "Fault-injection tests confirm downstream agents reject malformed input."
+      ],
+      "frameworks": ["OWASP-ASI08", "OWASP-LLM06", "NIST-MAP-4.2"]
+    },
+    {
+      "id": "g-circuit-breakers",
+      "type": "guardrail",
+      "title": "Blast-Radius Isolation & Circuit Breakers",
+      "summary": "Agents are segmented with separate credentials and quotas, messages are validated, and breakers halt fan-out when error or anomaly rates spike.",
+      "domain": "Multi-Agent & Memory Trust",
+      "severity": "HIGH",
+      "impact": "Stops one failing or compromised agent from taking the rest down with it.",
+      "remediation": [
+        "Segment agents by function and trust level.",
+        "Trip breakers on error rate, cost spikes, or repeated identical actions.",
+        "Escalate to a human when a breaker opens."
+      ],
+      "verification": [
+        "Breakers open within target time in fault-injection drills.",
+        "Each agent's credentials are scoped and unique."
+      ],
+      "frameworks": ["OWASP-ASI08", "ATLAS-AML.M0032", "ATLAS-AML.M0033", "NIST-MANAGE-2.4"]
     }
   ],
   "edges": [
@@ -1263,6 +1938,50 @@
     { "id": "e62", "source": "g-tool-pinning", "target": "t-tool-poisoning", "relation": "MITIGATES" },
     { "id": "e63", "source": "g-agent-identity", "target": "v-unauth-agent-channel", "relation": "MITIGATES" },
     { "id": "e64", "source": "g-agent-identity", "target": "t-agent-impersonation", "relation": "MITIGATES" },
-    { "id": "e65", "source": "g-tool-pinning", "target": "g-agent-identity", "relation": "REQUIRES" }
+    { "id": "e65", "source": "g-tool-pinning", "target": "g-agent-identity", "relation": "REQUIRES" },
+    { "id": "e66", "source": "t-hallucination-reliance", "target": "v-ungrounded-answers", "relation": "EXPLOITS" },
+    { "id": "e67", "source": "t-hallucination-reliance", "target": "v-overreliance-ui", "relation": "EXPLOITS" },
+    { "id": "e68", "source": "g-grounding-verification", "target": "v-ungrounded-answers", "relation": "MITIGATES" },
+    { "id": "e69", "source": "g-grounding-verification", "target": "t-hallucination-reliance", "relation": "MITIGATES" },
+    { "id": "e70", "source": "g-uncertainty-review", "target": "v-overreliance-ui", "relation": "MITIGATES" },
+    { "id": "e71", "source": "g-uncertainty-review", "target": "t-hallucination-reliance", "relation": "MITIGATES" },
+    { "id": "e72", "source": "g-uncertainty-review", "target": "g-grounding-verification", "relation": "REQUIRES" },
+    { "id": "e73", "source": "t-denial-of-wallet", "target": "v-no-resource-limits", "relation": "EXPLOITS" },
+    { "id": "e74", "source": "g-resource-budgets", "target": "v-no-resource-limits", "relation": "MITIGATES" },
+    { "id": "e75", "source": "g-resource-budgets", "target": "t-denial-of-wallet", "relation": "MITIGATES" },
+    { "id": "e76", "source": "t-slopsquatting", "target": "v-unvetted-ai-code", "relation": "EXPLOITS" },
+    { "id": "e77", "source": "t-slopsquatting", "target": "v-no-provenance", "relation": "EXPLOITS" },
+    { "id": "e78", "source": "g-dependency-allowlist", "target": "v-unvetted-ai-code", "relation": "MITIGATES" },
+    { "id": "e79", "source": "g-dependency-allowlist", "target": "t-slopsquatting", "relation": "MITIGATES" },
+    { "id": "e80", "source": "t-training-data-leak", "target": "v-unscrubbed-finetune", "relation": "EXPLOITS" },
+    { "id": "e81", "source": "g-training-data-scrubbing", "target": "v-unscrubbed-finetune", "relation": "MITIGATES" },
+    { "id": "e82", "source": "g-training-data-scrubbing", "target": "t-training-data-leak", "relation": "MITIGATES" },
+    { "id": "e83", "source": "g-training-data-scrubbing", "target": "g-data-provenance", "relation": "REQUIRES" },
+    { "id": "e84", "source": "t-embedding-inversion", "target": "v-raw-embeddings-exposed", "relation": "EXPLOITS" },
+    { "id": "e85", "source": "t-embedding-inversion", "target": "v-overpriv-index", "relation": "EXPLOITS" },
+    { "id": "e86", "source": "g-embedding-protection", "target": "v-raw-embeddings-exposed", "relation": "MITIGATES" },
+    { "id": "e87", "source": "g-embedding-protection", "target": "t-embedding-inversion", "relation": "MITIGATES" },
+    { "id": "e88", "source": "g-embedding-protection", "target": "g-doc-acl", "relation": "REQUIRES" },
+    { "id": "e89", "source": "t-agent-rce", "target": "v-dynamic-exec", "relation": "EXPLOITS" },
+    { "id": "e90", "source": "t-agent-rce", "target": "v-unvalidated-args", "relation": "EXPLOITS" },
+    { "id": "e91", "source": "t-agent-tool-hijack", "target": "t-agent-rce", "relation": "LEADS_TO" },
+    { "id": "e92", "source": "g-sandboxed-exec", "target": "v-dynamic-exec", "relation": "MITIGATES" },
+    { "id": "e93", "source": "g-sandboxed-exec", "target": "t-agent-rce", "relation": "MITIGATES" },
+    { "id": "e94", "source": "t-approval-manipulation", "target": "v-summary-only-approval", "relation": "EXPLOITS" },
+    { "id": "e95", "source": "g-verifiable-approval", "target": "v-summary-only-approval", "relation": "MITIGATES" },
+    { "id": "e96", "source": "g-verifiable-approval", "target": "t-approval-manipulation", "relation": "MITIGATES" },
+    { "id": "e97", "source": "g-dual-agent", "target": "g-verifiable-approval", "relation": "REQUIRES" },
+    { "id": "e98", "source": "t-rogue-agent", "target": "v-no-kill-switch", "relation": "EXPLOITS" },
+    { "id": "e99", "source": "t-rogue-agent", "target": "v-excessive-perms", "relation": "EXPLOITS" },
+    { "id": "e100", "source": "t-goal-drift", "target": "t-rogue-agent", "relation": "LEADS_TO" },
+    { "id": "e101", "source": "g-kill-switch", "target": "v-no-kill-switch", "relation": "MITIGATES" },
+    { "id": "e102", "source": "g-kill-switch", "target": "t-rogue-agent", "relation": "MITIGATES" },
+    { "id": "e103", "source": "g-kill-switch", "target": "t-goal-drift", "relation": "MITIGATES" },
+    { "id": "e104", "source": "t-cascading-failure", "target": "v-no-blast-radius", "relation": "EXPLOITS" },
+    { "id": "e105", "source": "t-memory-poison", "target": "t-cascading-failure", "relation": "LEADS_TO" },
+    { "id": "e106", "source": "t-agent-impersonation", "target": "t-cascading-failure", "relation": "LEADS_TO" },
+    { "id": "e107", "source": "g-circuit-breakers", "target": "v-no-blast-radius", "relation": "MITIGATES" },
+    { "id": "e108", "source": "g-circuit-breakers", "target": "t-cascading-failure", "relation": "MITIGATES" },
+    { "id": "e109", "source": "g-circuit-breakers", "target": "g-agent-identity", "relation": "REQUIRES" }
   ]
 }
