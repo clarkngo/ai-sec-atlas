@@ -66,7 +66,7 @@ export function SearchBox({ query, onQuery, results, onPick }: Props) {
   };
 
   return (
-    <div className="relative min-w-0 flex-1 sm:max-w-md">
+    <div className="relative min-w-[12rem] flex-1 basis-[14rem] sm:max-w-md">
       <label className="relative block">
         <span className="sr-only">Search threats, vulnerabilities, guardrails, and framework IDs</span>
         <svg
