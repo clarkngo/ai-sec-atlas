@@ -67,11 +67,21 @@ export interface AtlasMeta {
   severityMethod: { name: string; url: string; summary: string };
 }
 
+/** A curated walk through the atlas, e.g. "Hardening a RAG chatbot". */
+export interface AtlasPath {
+  id: string;
+  title: string;
+  summary: string;
+  steps: { node: string; note: string }[];
+}
+
 export interface AtlasData {
   meta: AtlasMeta;
   sources: AtlasSource[];
   references: Record<string, AtlasReference>;
   domains: string[];
+  domainInfo: Record<string, { summary: string }>;
+  paths: AtlasPath[];
   nodes: AtlasNode[];
   edges: AtlasEdge[];
 }

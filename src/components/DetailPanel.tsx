@@ -1,11 +1,82 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { AtlasData, AtlasNode, AtlasReference } from '../types';
 import { KIND_ICON_PATH, KIND_LABEL, SEVERITY_LABEL, SOURCE_ORDER, SOURCE_SHORT } from '../lib/theme';
+import { relatedGroups } from '../lib/related';
+import { play } from '../lib/sound';
+import { copyText } from '../lib/checklist';
+import { SeverityBadge } from './SeverityBadge';
+
+export interface PathNav {
+  title: string;
+  step: number;
+  total: number;
+  note: string;
+  onPrev: () => void;
+  onNext: () => void;
+  onExit: () => void;
+  onCopyChecklist: () => Promise<boolean>;
+}
 
 interface Props {
   node: AtlasNode;
   data: AtlasData;
   onClose: () => void;
+  onSelect: (id: string) => void;
+  path?: PathNav;
+}
+
+const smallBtn =
+  'rounded-md border border-[var(--atlas-border)] px-2 py-1 text-xs text-[var(--atlas-muted)] hover:text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)] disabled:opacity-40';
+
+function PathBar({ path }: { path: PathNav }) {
+  const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
+  const last = path.step === path.total - 1;
+  return (
+    <div className="border-b border-[var(--atlas-guard)]/30 bg-[var(--atlas-guard)]/5 px-4 py-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="min-w-0 truncate text-[12px] font-medium text-[var(--atlas-guard)]">{path.title}</p>
+        <p className="shrink-0 font-mono text-[10px] text-[var(--atlas-muted)]">
+          Step {path.step + 1} of {path.total}
+        </p>
+      </div>
+      <div className="mt-1.5 flex gap-1" aria-hidden>
+        {Array.from({ length: path.total }, (_, i) => (
+          <span
+            key={i}
+            className={`h-1 flex-1 rounded-full ${i <= path.step ? 'bg-[var(--atlas-guard)]' : 'bg-[var(--atlas-border)]'}`}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-[13px] leading-relaxed text-[var(--atlas-text)]">{path.note}</p>
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <button type="button" className={smallBtn} onClick={path.onPrev} disabled={path.step === 0}>
+          ← Back
+        </button>
+        {last ? (
+          <button
+            type="button"
+            className={smallBtn}
+            onClick={async () => {
+              setCopied((await path.onCopyChecklist()) ? 'ok' : 'fail');
+            }}
+          >
+            <span aria-live="polite">{copied === 'ok' ? 'Copied checklist' : copied === 'fail' ? 'Copy failed' : 'Copy this path as a checklist'}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="rounded-md bg-[var(--atlas-guard)]/20 px-2.5 py-1 text-xs font-medium text-[var(--atlas-guard)] hover:bg-[var(--atlas-guard)]/30 focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
+            onClick={path.onNext}
+          >
+            Next →
+          </button>
+        )}
+        <button type="button" className={`${smallBtn} ml-auto`} onClick={path.onExit}>
+          {last ? 'Finish' : 'Exit path'}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 const LEVEL_SHORT = { HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' } as const;
@@ -37,20 +108,17 @@ function kindAccent(type: AtlasNode['type']) {
   }
 }
 
-export function DetailPanel({ node, data, onClose }: Props) {
+export function DetailPanel({ node, data, onClose, onSelect, path }: Props) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
 
-  useEffect(() => setCopied(false), [node.id]);
+  useEffect(() => setCopied('idle'), [node.id]);
 
   const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
+    const ok = await copyText(window.location.href);
+    setCopied(ok ? 'ok' : 'fail');
+    if (ok) play('success');
   };
 
   const refsBySource = SOURCE_ORDER.map((source) => ({
@@ -68,6 +136,7 @@ export function DetailPanel({ node, data, onClose }: Props) {
           .filter((n): n is AtlasNode => !!n)
       : [];
   const method = data.meta.severityMethod;
+  const related = relatedGroups(node, data);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -92,7 +161,7 @@ export function DetailPanel({ node, data, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-x-0 bottom-0 z-40 flex max-h-[78vh] flex-col overflow-hidden rounded-t-2xl border border-[var(--atlas-border)] bg-[var(--atlas-panel)] shadow-2xl sheet-enter md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[min(100%,26rem)] md:rounded-none md:border-y-0 md:border-r-0 md:panel-enter"
+        className="fixed inset-x-0 bottom-0 z-40 flex max-h-[78vh] flex-col overflow-hidden rounded-t-2xl border border-[var(--atlas-border)] bg-[var(--atlas-panel)] shadow-2xl sheet-enter md:absolute md:inset-y-0 md:right-0 md:left-auto md:max-h-none md:w-[min(100%,26rem)] md:rounded-none md:border-y-0 md:border-r-0 md:panel-enter"
       >
         <div className="flex items-start gap-3 border-b border-[var(--atlas-border)] px-4 py-3">
           <span
@@ -109,16 +178,7 @@ export function DetailPanel({ node, data, onClose }: Props) {
               <span className="font-mono text-[10px] font-semibold tracking-widest uppercase" style={{ color: accent }}>
                 {KIND_LABEL[node.type]}
               </span>
-              <span
-                className="rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium"
-                style={{
-                  color: severityColor(node.severity),
-                  borderColor: `${severityColor(node.severity)}66`,
-                  background: `${severityColor(node.severity)}18`,
-                }}
-              >
-                {node.type === 'guardrail' ? `Addresses ${SEVERITY_LABEL[node.severity]}` : SEVERITY_LABEL[node.severity]}
-              </span>
+              <SeverityBadge node={node} />
             </div>
             <h2 id={titleId} className="mt-1 text-base font-semibold leading-snug text-[var(--atlas-text)]">
               {node.title}
@@ -139,16 +199,58 @@ export function DetailPanel({ node, data, onClose }: Props) {
               onClick={copyLink}
               className="rounded-md border border-[var(--atlas-border)] px-2 py-1 text-xs text-[var(--atlas-muted)] hover:text-[var(--atlas-text)] focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
             >
-              <span aria-live="polite">{copied ? 'Copied' : 'Copy link'}</span>
+              <span aria-live="polite">{copied === 'ok' ? 'Copied' : copied === 'fail' ? 'Copy failed' : 'Copy link'}</span>
             </button>
           </div>
         </div>
+
+        {path && <PathBar path={path} />}
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 text-sm">
           <section>
             <h3 className="mb-1 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">Summary</h3>
             <p className="leading-relaxed text-[var(--atlas-text)]/90">{node.summary}</p>
           </section>
+
+          {related.length > 0 && (
+            <section>
+              <h3 className="mb-1.5 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">Related</h3>
+              <div className="space-y-2">
+                {related.map((g) => (
+                  <div key={g.label}>
+                    <p className="mb-1 text-[11px] text-[var(--atlas-muted)]">{g.label}</p>
+                    <ul className="space-y-1">
+                      {g.nodes.map((r) => (
+                        <li key={r.id}>
+                          <button
+                            type="button"
+                            onClick={() => onSelect(r.id)}
+                            className="flex w-full items-center gap-2 rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-bg)] px-2.5 py-1.5 text-left hover:border-[var(--atlas-accent)]/50 focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="h-3.5 w-3.5 shrink-0"
+                              fill="none"
+                              stroke={kindAccent(r.type)}
+                              strokeWidth="2"
+                              aria-hidden
+                            >
+                              <path d={KIND_ICON_PATH[r.type]} strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--atlas-text)]">{r.title}</span>
+                            <SeverityBadge node={r} />
+                            <span className="text-[var(--atlas-muted)]" aria-hidden>
+                              →
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section>
             <h3 className="mb-1 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">Impact</h3>

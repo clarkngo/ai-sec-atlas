@@ -69,8 +69,25 @@ for (const n of data.nodes.filter((x) => x.type === 'guardrail')) {
   if (n.severity !== expected) errors.push(`${n.id}: guardrail severity ${n.severity} != ${expected} (max of mitigated)`);
 }
 
+for (const d of data.domains) {
+  if (!data.domainInfo?.[d]?.summary) errors.push(`domain "${d}": missing domainInfo summary`);
+}
+
+const pathIds = new Set();
+for (const p of data.paths ?? []) {
+  if (pathIds.has(p.id)) errors.push(`duplicate path id ${p.id}`);
+  pathIds.add(p.id);
+  if (!p.steps?.length) errors.push(`path ${p.id}: no steps`);
+  for (const [i, st] of (p.steps ?? []).entries()) {
+    if (!ids.has(st.node)) errors.push(`path ${p.id} step ${i + 1}: unknown node ${st.node}`);
+    if (!st.note) errors.push(`path ${p.id} step ${i + 1}: missing note`);
+  }
+}
+
 if (errors.length) {
   console.error(`Dataset validation failed (${errors.length}):\n  ` + errors.join('\n  '));
   process.exit(1);
 }
-console.log(`Dataset OK: ${data.nodes.length} nodes, ${data.edges.length} edges, ${Object.keys(data.references).length} references.`);
+console.log(
+  `Dataset OK: ${data.nodes.length} nodes, ${data.edges.length} edges, ${Object.keys(data.references).length} references, ${pathIds.size} paths.`,
+);

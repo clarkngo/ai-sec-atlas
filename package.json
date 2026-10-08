@@ -1,7 +1,7 @@
 {
   "name": "ai-sec-atlas",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Interactive threat-to-guardrail map for AI agents, LLM apps, and RAG, mapped to OWASP, MITRE ATLAS, and NIST AI RMF.",
   "license": "MIT",
   "repository": {

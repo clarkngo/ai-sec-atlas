@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "AI Security Atlas",
-    "datasetVersion": "0.2.0",
+    "datasetVersion": "0.3.0",
     "updated": "2026-10-07",
     "license": "MIT",
     "repository": "https://github.com/clarkngo/ai-sec-atlas",
@@ -96,6 +96,57 @@
     "Model Supply Chain & Training Integrity",
     "LLM Application & Output Security",
     "Multi-Agent & Memory Trust"
+  ],
+  "domainInfo": {
+    "Autonomous Agent & MCP Security": {"summary": "Agents that call tools on your behalf: what happens when an attacker steers which tool runs and with what arguments."},
+    "RAG & Knowledge Retrieval Security": {"summary": "Chatbots that answer from your documents: poisoned sources, injected instructions, and answers that leak files users shouldn't see."},
+    "Model Supply Chain & Training Integrity": {"summary": "Where your model and data come from: poisoned training sets, malicious model files, and stolen model behavior."},
+    "LLM Application & Output Security": {"summary": "The app around the model: leaked system prompts, jailbreaks, and output that steals data when the browser renders it."},
+    "Multi-Agent & Memory Trust": {"summary": "Agents that remember and talk to each other: poisoned memory, tampered tool definitions, and agents posing as other agents."}
+  },
+  "paths": [
+    {
+      "id": "mcp-agent",
+      "title": "Securing an MCP-connected agent",
+      "summary": "For teams giving an agent tools through MCP servers. Covers what a malicious tool can do and the controls that contain it.",
+      "steps": [
+        {"node": "t-tool-poisoning", "note": "Start with the tools themselves: an MCP server can hide instructions in tool descriptions."},
+        {"node": "v-mutable-tool-manifest", "note": "This works because clients trust tool definitions that can change after you approve them."},
+        {"node": "g-tool-pinning", "note": "Fix: pin tool definitions by hash and require re-approval when they change."},
+        {"node": "t-agent-tool-hijack", "note": "Even with trusted tools, injected text can steer which tool runs and with what arguments."},
+        {"node": "v-excessive-perms", "note": "The damage depends on how much each tool is allowed to do."},
+        {"node": "g-mcp-scope", "note": "Fix: give each tool the narrowest token it needs, for the shortest time."},
+        {"node": "g-dual-agent", "note": "Fix: require approval from a separate reviewer before high-impact actions run."}
+      ]
+    },
+    {
+      "id": "rag-chatbot",
+      "title": "Hardening a RAG chatbot",
+      "summary": "For teams answering questions from internal documents. Follows a poisoned document from ingestion to a leaked answer.",
+      "steps": [
+        {"node": "t-indirect-injection", "note": "Any document you index can carry instructions aimed at the model."},
+        {"node": "v-no-sanitize", "note": "They reach the model because retrieved text is pasted into the prompt as-is."},
+        {"node": "g-preingest", "note": "Fix: scan and quarantine documents before they are indexed."},
+        {"node": "t-doc-exfil", "note": "Separately, the chatbot may answer with documents the user isn't allowed to see."},
+        {"node": "v-overpriv-index", "note": "This happens when one index mixes documents with different access levels."},
+        {"node": "g-doc-acl", "note": "Fix: filter search results by the user's permissions before the model sees them."},
+        {"node": "t-output-exfil", "note": "Finally, injected instructions can make the answer itself leak data when rendered."},
+        {"node": "g-output-encoding", "note": "Fix: sanitize output and block remote images with a strict CSP."}
+      ]
+    },
+    {
+      "id": "open-weights",
+      "title": "Bringing in an open-weights model",
+      "summary": "For teams downloading models or fine-tuning on outside data. Covers the checks to run before a model reaches production.",
+      "steps": [
+        {"node": "t-malicious-artifact", "note": "A downloaded model file can run code the moment you load it."},
+        {"node": "v-unsafe-serialization", "note": "The cause is pickle-based loading of untrusted files."},
+        {"node": "g-safe-loading", "note": "Fix: load only tensor-only formats and scan uploads."},
+        {"node": "g-model-signing", "note": "Fix: promote only signed, hash-pinned artifacts with a bill of materials."},
+        {"node": "t-data-poison", "note": "Fine-tuning data can also plant hidden behavior."},
+        {"node": "g-data-provenance", "note": "Fix: track where every dataset came from and screen it before training."}
+      ]
+    }
   ],
   "nodes": [
     {

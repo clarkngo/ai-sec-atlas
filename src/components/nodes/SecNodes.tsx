@@ -1,6 +1,7 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { AtlasNode, LayoutDirection } from '../../types';
-import { KIND_ICON_PATH, KIND_LABEL, KIND_SHORT, SEVERITY_LABEL } from '../../lib/theme';
+import { KIND_ICON_PATH, KIND_LABEL, KIND_SHORT } from '../../lib/theme';
+import { SeverityBadge, severityText } from '../SeverityBadge';
 
 export type SecFlowNode = Node<
   {
@@ -11,19 +12,6 @@ export type SecFlowNode = Node<
   },
   'threat' | 'vulnerability' | 'guardrail'
 >;
-
-function severityClass(sev: AtlasNode['severity']) {
-  switch (sev) {
-    case 'CRITICAL':
-      return 'text-[var(--atlas-critical)] border-[var(--atlas-critical)]/40 bg-[var(--atlas-critical)]/10';
-    case 'HIGH':
-      return 'text-[var(--atlas-high)] border-[var(--atlas-high)]/40 bg-[var(--atlas-high)]/10';
-    case 'MEDIUM':
-      return 'text-[var(--atlas-medium)] border-[var(--atlas-medium)]/40 bg-[var(--atlas-medium)]/10';
-    default:
-      return 'text-[var(--atlas-low)] border-[var(--atlas-low)]/40 bg-[var(--atlas-low)]/10';
-  }
-}
 
 function NodeShell({
   data,
@@ -60,7 +48,7 @@ function NodeShell({
         selected ? 'ring-2 ring-[var(--atlas-accent)] ring-offset-2 ring-offset-[var(--atlas-bg)]' : ''
       } ${dimmed ? 'opacity-20' : 'opacity-100'}`}
       style={{ borderColor: accent, ...patternStyle }}
-      aria-label={`${KIND_LABEL[atlas.type]}: ${atlas.title}, ${atlas.type === 'guardrail' ? 'addresses' : 'severity'} ${SEVERITY_LABEL[atlas.severity]}`}
+      aria-label={`${KIND_LABEL[atlas.type]}: ${atlas.title}, ${severityText(atlas)}`}
     >
       <Handle type="target" position={targetPos} className="!h-2 !w-2 !border-0 !bg-[var(--atlas-muted)]" />
       <div className="mb-1.5 flex items-center gap-2">
@@ -76,11 +64,7 @@ function NodeShell({
         <span className="font-mono text-[10px] font-semibold tracking-widest uppercase" style={{ color: accent }}>
           {KIND_SHORT[atlas.type]}
         </span>
-        <span
-          className={`ml-auto rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-wide ${severityClass(atlas.severity)}`}
-        >
-          {atlas.type === 'guardrail' ? `FOR ${atlas.severity}` : atlas.severity}
-        </span>
+        <SeverityBadge node={atlas} className="ml-auto" />
       </div>
       <div className="text-[13px] font-semibold leading-snug text-[var(--atlas-text)]">{atlas.title}</div>
       <div className="mt-1 line-clamp-2 text-[11px] leading-snug text-[var(--atlas-muted)]">{atlas.summary}</div>

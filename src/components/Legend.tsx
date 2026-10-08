@@ -4,6 +4,9 @@ export function Legend() {
   return (
     <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[min(100%,20rem)] rounded-lg border border-[var(--atlas-border)] bg-[var(--atlas-panel)]/95 px-3 py-2 text-[11px] shadow-lg backdrop-blur">
       <div className="mb-1.5 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">Legend</div>
+      <p className="mb-2 leading-snug text-[var(--atlas-text)]/85">
+        Threats exploit vulnerabilities; guardrails mitigate them. Click a card to see its links.
+      </p>
       <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1">
         <span className="inline-flex items-center gap-1.5 text-[var(--atlas-threat)]">
           <span className="h-2.5 w-2.5 clip-threat bg-[var(--atlas-threat)]" aria-hidden />
@@ -44,6 +47,7 @@ export function StatusBar({
   visible,
   total,
   selectedTitle,
+  showCount,
   repository,
   license,
   onAbout,
@@ -51,6 +55,7 @@ export function StatusBar({
   visible: number;
   total: number;
   selectedTitle: string | null;
+  showCount: boolean;
   repository: string;
   license: string;
   onAbout: () => void;
@@ -58,11 +63,13 @@ export function StatusBar({
   const linkCls =
     'text-[var(--atlas-accent)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]';
   return (
-    <div className="absolute right-3 bottom-3 z-10 flex flex-col items-end gap-1.5">
-      <div className="hidden rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-panel)]/95 px-2.5 py-1.5 font-mono text-[10px] text-[var(--atlas-muted)] backdrop-blur sm:block">
-        {visible}/{total} nodes
-        {selectedTitle ? ` · ${selectedTitle}` : ' · click a node for detail'}
-      </div>
+    <div className="pointer-events-none absolute right-3 bottom-3 z-10 flex flex-col items-end gap-1.5 [&>*]:pointer-events-auto">
+      {showCount && (
+        <div className="hidden rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-panel)]/95 px-2.5 py-1.5 font-mono text-[10px] text-[var(--atlas-muted)] backdrop-blur sm:block">
+          {visible}/{total} nodes
+          {selectedTitle ? ` · ${selectedTitle}` : ' · click a card for details'}
+        </div>
+      )}
       <p className="rounded-md border border-[var(--atlas-border)] bg-[var(--atlas-panel)]/95 px-2.5 py-1.5 font-mono text-[10px] text-[var(--atlas-muted)] backdrop-blur">
         v{__APP_VERSION__} · {license} ·{' '}
         <a href={repository} target="_blank" rel="noopener noreferrer" className={linkCls}>
