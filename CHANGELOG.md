@@ -2,6 +2,19 @@
 
 Dataset and app versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.3.0 — 2026-10-07
+
+- New Overview start page: one card per area with a plain-language description and risk counts, plus guided paths.
+- Three guided paths ("Securing an MCP-connected agent", "Hardening a RAG chatbot", "Bringing in an open-weights model") that step through entries with a note at each step. Paths are stored in the dataset and checked by the validator.
+- List view grouped by area and sorted by severity, for phones, screen readers, and quick scanning.
+- Detail panel now lists related entries (exploits, mitigated by, and so on) as links, so you can go from a threat to its fix without searching the map.
+- Search shows a results dropdown with keyboard navigation; framework IDs such as `LLM07` or `AML.T0051` match exactly.
+- First-visit "How to read the map" guide; edge labels appear only around the selected card or on hover; plainer legend.
+- Guardrail badges read "Fixes critical" instead of "FOR CRITICAL". Layout direction moved into a Layout menu.
+- Copy any area or path as a Markdown checklist of guardrails, remediation steps, and tests.
+- Optional sound effects (synthesized, no audio files) with a mute toggle that is remembered.
+- Links keep the view, area, entry, or path step (`#view=list&node=…`, `#path=rag-chatbot&step=3`). Old `#node=…` links still work.
+
 ## 0.2.0 — 2026-10-07
 
 - Every entry now links to official framework references: OWASP Top 10 for LLM Applications 2025, OWASP Top 10 for Agentic Applications 2026, MITRE ATLAS (2026.09 data release), and NIST AI RMF 1.0.

@@ -2,7 +2,7 @@
 
 Interactive threat model for AI agents, LLM applications, and RAG systems. Start at an adversarial threat, trace it to the vulnerabilities it exploits, and land on concrete guardrails with remediation steps, verification tests, and code patterns. Every entry is mapped to OWASP, MITRE ATLAS, and NIST AI RMF references.
 
-**Live:** https://clarkngo.github.io/ai-sec-atlas/ · **Version:** 0.2.0 ([changelog](CHANGELOG.md)) · **License:** [MIT](LICENSE)
+**Live:** https://clarkngo.github.io/ai-sec-atlas/ · **Version:** 0.3.0 ([changelog](CHANGELOG.md)) · **License:** [MIT](LICENSE)
 
 > **Not MITRE ATLAS.** This is an independent project, not affiliated with or endorsed by MITRE. [MITRE ATLAS](https://atlas.mitre.org/) is MITRE's knowledge base of adversary tactics, techniques, and case studies against AI systems, written from the attacker's point of view. This project is written for defenders: it links each risk to the weakness it exploits and to the control that fixes it, plus tests that confirm the fix. It cites ATLAS IDs as references; it does not extend or replace ATLAS.
 
@@ -39,10 +39,19 @@ A guardrail is labeled with the highest severity among the risks it directly mit
 4. **LLM Application & Output Security**: system prompt extraction, jailbreaks, output-rendered exfiltration → output encoding & CSP, prompt hygiene & canaries, I/O safety classifiers
 5. **Multi-Agent & Memory Trust**: persistent memory poisoning, MCP tool description poisoning, inter-agent impersonation → memory provenance, tool manifest pinning, agent workload identity
 
+## Using the site
+
+- **Overview** is the start page: pick an area, or follow a guided path.
+- **Map** shows how threats, vulnerabilities, and guardrails connect. Click a card to highlight its links; the detail panel lists related entries you can click through.
+- **List** shows the same entries grouped by area and sorted by severity, which works better on phones.
+- **Search** (⌘K / Ctrl K) accepts plain words or framework IDs (`LLM07`, `ASI06`, `AML.T0051`, `MEASURE 2.7`).
+- **Copy checklist** on an area or at the end of a path exports its guardrails as Markdown.
+- Sound effects are on by default and quiet; the speaker button in the header mutes them.
+
 ## Use the data
 
 - **Dataset:** [`public/data/seed-data.json`](public/data/seed-data.json), also served at https://clarkngo.github.io/ai-sec-atlas/data/seed-data.json. It contains `meta`, `sources`, `references`, `domains`, `nodes`, and `edges`; the TypeScript schema is in [`src/types.ts`](src/types.ts).
-- **Link to an entry:** use **Copy link** in any detail panel (URLs look like `…/ai-sec-atlas/#node=t-jailbreak`).
+- **Link to an entry:** use **Copy link** in any detail panel. Links keep the view and area (`#view=list&node=t-jailbreak`) or the path step (`#path=rag-chatbot&step=3`).
 - **Cite:** see [`CITATION.cff`](CITATION.cff), or use **Cite this repository** on GitHub.
 
 ## Contribute
