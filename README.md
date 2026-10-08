@@ -2,7 +2,7 @@
 
 Interactive threat model for AI agents, LLM applications, and RAG systems. Start at an adversarial threat, trace it to the vulnerabilities it exploits, and land on concrete guardrails with remediation steps, verification tests, and code patterns. Every entry is mapped to OWASP, MITRE ATLAS, and NIST AI RMF references.
 
-**Live:** https://clarkngo.github.io/ai-sec-atlas/ · **Version:** 0.3.0 ([changelog](CHANGELOG.md)) · **License:** [MIT](LICENSE)
+**Live:** https://clarkngo.github.io/ai-sec-atlas/ · **Version:** 0.4.0 ([changelog](CHANGELOG.md)) · **License:** [MIT](LICENSE)
 
 > **Not MITRE ATLAS.** This is an independent project, not affiliated with or endorsed by MITRE. [MITRE ATLAS](https://atlas.mitre.org/) is MITRE's knowledge base of adversary tactics, techniques, and case studies against AI systems, written from the attacker's point of view. This project is written for defenders: it links each risk to the weakness it exploits and to the control that fixes it, plus tests that confirm the fix. It cites ATLAS IDs as references; it does not extend or replace ATLAS.
 
@@ -33,11 +33,13 @@ A guardrail is labeled with the highest severity among the risks it directly mit
 
 ## Domains
 
-1. **Autonomous Agent & MCP Security**: tool hijacking, unbounded MCP calls, goal drift → permission scoping, dual-agent approval, schema validation
-2. **RAG & Knowledge Retrieval Security**: indirect injection, vector poisoning, document exfiltration → pre-ingest scanning, document ACLs, output filtering
-3. **Model Supply Chain & Training Integrity**: data poisoning, malicious model artifacts, model extraction → signed registry & AIBOM, safe artifact loading, dataset provenance, inference quotas
-4. **LLM Application & Output Security**: system prompt extraction, jailbreaks, output-rendered exfiltration → output encoding & CSP, prompt hygiene & canaries, I/O safety classifiers
-5. **Multi-Agent & Memory Trust**: persistent memory poisoning, MCP tool description poisoning, inter-agent impersonation → memory provenance, tool manifest pinning, agent workload identity
+1. **Autonomous Agent & MCP Security**: tool hijacking, unbounded MCP calls, goal drift, prompt-to-code execution, manipulated human approvals, rogue agents → permission scoping, schema validation, dual-agent approval, hardened sandbox, verifiable approval previews, kill switch
+2. **RAG & Knowledge Retrieval Security**: indirect injection, vector poisoning, document exfiltration, embedding inversion → pre-ingest scanning, document ACLs, output filtering, embedding protection
+3. **Model Supply Chain & Training Integrity**: data poisoning, malicious model artifacts, model extraction, hallucinated package squatting, training data memorization → signed registry & AIBOM, safe artifact loading, dataset provenance, inference quotas, dependency allowlisting, PII scrubbing
+4. **LLM Application & Output Security**: system prompt extraction, jailbreaks, output-rendered exfiltration, hallucinated answers, denial of wallet → output encoding & CSP, prompt hygiene, I/O classifiers, grounding & citation verification, uncertainty labeling & review, resource budgets
+5. **Multi-Agent & Memory Trust**: memory poisoning, MCP tool poisoning, inter-agent impersonation, cascading failures → memory provenance, tool manifest pinning, agent workload identity, circuit breakers
+
+Every item in the OWASP Top 10 for LLM Applications 2025 and the OWASP Top 10 for Agentic Applications 2026 has at least one threat and one guardrail.
 
 ## Using the site
 
