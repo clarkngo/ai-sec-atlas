@@ -118,11 +118,24 @@ export function AboutDialog({ data, onClose }: Props) {
             <h3 className={h3Cls}>How severity is assigned</h3>
             <p className="mb-2">
               Severity follows the <Ext href={meta.severityMethod.url}>{meta.severityMethod.name}</Ext>. Each threat
-              and vulnerability is rated High, Medium, or Low for impact and for likelihood, with a written rationale
-              shown in its detail panel. The overall rating is read from the matrix below. A guardrail is labeled with
-              the highest severity among the risks it directly mitigates. These ratings are the author's assessment
-              for a typical production deployment and should be re-scored for your own environment.
+              and vulnerability is rated High, Medium, or Low for impact and for likelihood using the rubric below,
+              with a written rationale and cited evidence in its detail panel. A High likelihood requires at least one
+              documented real-world incident; the build fails otherwise. The overall rating is read from the matrix.
+              A guardrail is labeled with the highest severity among the risks it directly mitigates. Ratings assume a
+              typical production deployment; re-score them for your own environment.
             </p>
+            <dl className="mb-3 space-y-2 text-[13px]">
+              {(['impact', 'likelihood'] as const).map((axis) =>
+                (['HIGH', 'MEDIUM', 'LOW'] as const).map((lvl) => (
+                  <div key={`${axis}-${lvl}`}>
+                    <dt className="font-medium text-[var(--atlas-text)]">
+                      {axis === 'impact' ? 'Impact' : 'Likelihood'} {lvl.charAt(0) + lvl.slice(1).toLowerCase()}
+                    </dt>
+                    <dd className="text-[var(--atlas-muted)]">{meta.severityMethod.rubric[axis][lvl]}</dd>
+                  </div>
+                )),
+              )}
+            </dl>
             <div className="overflow-x-auto">
               <table className="w-full max-w-sm border-collapse font-mono text-[11px]">
                 <caption className="sr-only">Overall severity by impact (rows) and likelihood (columns)</caption>
@@ -158,6 +171,10 @@ export function AboutDialog({ data, onClose }: Props) {
               </li>
               <li>
                 Machine-readable dataset: <Ext href={datasetUrl}>seed-data.json</Ext>
+              </li>
+              <li>
+                Plain pages for every entry, readable without JavaScript:{' '}
+                <Ext href={`${import.meta.env.BASE_URL}entry/`}>all entries</Ext>
               </li>
               <li>
                 Link to any entry with <span className="font-mono text-[12px]">Copy link</span> in its detail panel.

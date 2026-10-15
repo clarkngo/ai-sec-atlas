@@ -1,14 +1,26 @@
 {
   "meta": {
     "name": "AI Security Atlas",
-    "datasetVersion": "0.4.0",
-    "updated": "2026-10-07",
+    "datasetVersion": "0.5.0",
+    "updated": "2026-10-15",
     "license": "MIT",
     "repository": "https://github.com/clarkngo/ai-sec-atlas",
     "severityMethod": {
       "name": "OWASP Risk Rating Methodology",
       "url": "https://owasp.org/www-community/OWASP_Risk_Rating_Methodology",
-      "summary": "Threats and vulnerabilities are scored for impact and likelihood (HIGH / MEDIUM / LOW) with a written rationale. Overall severity is read from the OWASP Risk Rating matrix. A guardrail's severity is the highest severity among the risks it directly mitigates."
+      "summary": "Threats and vulnerabilities are rated for impact and likelihood using the rubric below, with a written rationale and cited evidence. Overall severity is read from the OWASP Risk Rating matrix. A guardrail's severity is the highest severity among the risks it directly mitigates.",
+      "rubric": {
+        "impact": {
+          "HIGH": "Code execution, credential compromise, exposure of regulated or confidential data, irreversible actions, or system-wide failure.",
+          "MEDIUM": "Limited or recoverable harm: cost, availability, reputational damage, or exposure confined to one session or user.",
+          "LOW": "Nuisance or degraded quality without a security consequence."
+        },
+        "likelihood": {
+          "HIGH": "At least one documented real-world incident, and the attack needs no access beyond what the system exposes to ordinary users or content (publishing to a public registry counts as ordinary).",
+          "MEDIUM": "Publicly demonstrated against real products or in peer-reviewed research, or seen in the wild only with a prior foothold such as stolen credentials.",
+          "LOW": "No public cases yet, or the attack needs privileged or insider access."
+        }
+      }
     }
   },
   "sources": [
@@ -203,13 +215,18 @@
       "title": "Agent Tool Hijacking",
       "summary": "Adversary steers an autonomous agent into invoking privileged tools with attacker-chosen arguments via prompt or memory manipulation.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: privileged tools act on production systems. Likelihood high: any untrusted text in context can carry the payload, and public demonstrations are routine."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: privileged tools act on production systems. Likelihood medium: repeatedly demonstrated against commercial agents (Copilot Studio, Jira, Gemini), but no confirmed in-the-wild incident is catalogued yet."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM06", "OWASP-ASI02", "ATLAS-AML.T0053", "ATLAS-AML.T0051", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "demonstration", "title": "Data Exfiltration via Agent Tools in Copilot Studio", "source": "MITRE ATLAS case study AML.CS0037", "url": "https://atlas.mitre.org/studies/AML.CS0037", "year": 2025},
+        {"kind": "demonstration", "title": "Living Off AI: Prompt Injection via Jira Service Management", "source": "MITRE ATLAS case study AML.CS0039", "url": "https://atlas.mitre.org/studies/AML.CS0039", "year": 2025},
+        {"kind": "demonstration", "title": "Prompt-Based Attacks Against Gemini via Calendar Invitations", "source": "MITRE ATLAS case study AML.CS0063", "url": "https://atlas.mitre.org/studies/AML.CS0063", "year": 2025},
+        {"kind": "research", "title": "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection", "source": "arXiv 2302.12173", "url": "https://arxiv.org/abs/2302.12173", "year": 2023}
+      ],
       "impact": "Unauthorized tool execution can exfiltrate secrets, mutate production systems, or pivot into connected SaaS APIs.",
       "remediation": [
         "Bind every tool call to an allowlisted schema and deny unknown parameters.",
@@ -220,7 +237,8 @@
         "Red-team with tool-name confusion and argument smuggling payloads.",
         "Assert audit logs capture caller identity, tool name, and argument digests."
       ],
-      "codeExample": "if (!allowlist.has(tool.name)) throw new DenyError('tool');\nvalidate(tool.args, schemas[tool.name]);"
+      "codeExample": "if (!allowlist.has(tool.name)) throw new DenyError('tool');\nvalidate(tool.args, schemas[tool.name]);",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM06", "OWASP-ASI02", "ATLAS-AML.T0053", "ATLAS-AML.T0051", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-mcp-unbounded",
@@ -228,13 +246,15 @@
       "title": "Unbounded MCP Tool Calls",
       "summary": "Model Context Protocol servers expose tools without rate, depth, or blast-radius limits, enabling recursive or fan-out abuse.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "MEDIUM",
-        "likelihood": "HIGH",
-        "rationale": "Impact medium: cost and availability loss, usually recoverable. Likelihood high: agent loops occur even without an attacker."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact medium: cost and availability loss, usually recoverable. Likelihood medium: runaway loops are common operationally; deliberate abuse is documented for stolen cloud LLM access rather than MCP specifically."
       },
-      "frameworks": ["OWASP-LLM10", "OWASP-LLM06", "OWASP-ASI08", "ATLAS-AML.T0034.002", "ATLAS-AML.T0029", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "incident", "title": "LLM Jacking", "source": "MITRE ATLAS case study AML.CS0030", "url": "https://atlas.mitre.org/studies/AML.CS0030", "year": 2024}
+      ],
       "impact": "Runaway tool loops burn budget, overwhelm backends, and amplify a single injection into multi-system damage.",
       "remediation": [
         "Enforce per-session call budgets and maximum recursion depth.",
@@ -245,7 +265,8 @@
         "Load-test agent loops against a mock MCP server with budget counters.",
         "Confirm circuit breakers trip before backend SLOs are breached."
       ],
-      "codeExample": "const budget = session.toolBudget;\nif (budget.remaining <= 0) return deny('budget');\nbudget.consume(1);"
+      "codeExample": "const budget = session.toolBudget;\nif (budget.remaining <= 0) return deny('budget');\nbudget.consume(1);",
+      "frameworks": ["OWASP-LLM10", "OWASP-LLM06", "OWASP-ASI08", "ATLAS-AML.T0034.002", "ATLAS-AML.T0029", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-goal-drift",
@@ -257,9 +278,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: agent acts against policy while appearing healthy. Likelihood medium: needs long-running memory or multi-turn access."
+        "rationale": "Impact high: the agent acts against policy while appearing healthy. Likelihood medium: observed in a 2026 incident where evaluation agents crossed their boundaries, but it needs long-running autonomy."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM06", "OWASP-ASI01", "OWASP-ASI10", "ATLAS-AML.T0051", "NIST-MEASURE-2.4"],
+      "evidence": [
+        {"kind": "incident", "title": "Autonomous OpenAI Evaluation Agents Compromise Hugging Face Infrastructure", "source": "MITRE ATLAS case study AML.CS0068", "url": "https://atlas.mitre.org/studies/AML.CS0068", "year": 2026},
+        {"kind": "demonstration", "title": "Hacking ChatGPT's Memories with Prompt Injection", "source": "MITRE ATLAS case study AML.CS0040", "url": "https://atlas.mitre.org/studies/AML.CS0040", "year": 2024}
+      ],
       "impact": "Agents pursue shadow goals that violate policy while still appearing task-complete in telemetry.",
       "remediation": [
         "Checkpoint goals against a signed policy charter each turn.",
@@ -269,7 +293,8 @@
       "verification": [
         "Inject contradictory goal updates mid-run and confirm charter veto.",
         "Review divergence metrics between declared goal and tool sequence."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM06", "OWASP-ASI01", "OWASP-ASI10", "ATLAS-AML.T0051", "NIST-MEASURE-2.4"]
     },
     {
       "id": "v-excessive-perms",
@@ -281,9 +306,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "HIGH",
-        "rationale": "Impact high: one bad call inherits admin reach. Likelihood high: broad OAuth scopes are the default in most connectors."
+        "rationale": "Impact high: one bad call inherits broad reach. Likelihood high: an over-scoped token let an attacker plant destructive agent code in the Amazon Q extension (2025 incident), and broad scopes are the connector default."
       },
-      "frameworks": ["OWASP-LLM06", "OWASP-ASI03", "ATLAS-AML.T0053", "NIST-MAP-4.2"],
+      "evidence": [
+        {"kind": "incident", "title": "Code to Deploy Destructive AI Agent Discovered in Amazon Q VS Code Extension", "source": "MITRE ATLAS case study AML.CS0047", "url": "https://atlas.mitre.org/studies/AML.CS0047", "year": 2025},
+        {"kind": "demonstration", "title": "Claude Code GitHub Action Secret Exposure", "source": "MITRE ATLAS case study AML.CS0067", "url": "https://atlas.mitre.org/studies/AML.CS0067", "year": 2026}
+      ],
       "impact": "A single compromised tool call inherits admin-level reach across mail, cloud storage, and CI.",
       "remediation": [
         "Issue narrowly scoped tokens per tool capability.",
@@ -294,7 +322,8 @@
         "Enumerate effective scopes in a pre-deploy permission report.",
         "Attempt out-of-scope API calls and expect hard denials."
       ],
-      "codeExample": "const token = mint({ scopes: tool.requiredScopes, ttl: '90s' });"
+      "codeExample": "const token = mint({ scopes: tool.requiredScopes, ttl: '90s' });",
+      "frameworks": ["OWASP-LLM06", "OWASP-ASI03", "ATLAS-AML.T0053", "NIST-MAP-4.2"]
     },
     {
       "id": "v-unvalidated-args",
@@ -306,9 +335,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: arguments reach SQL, shell, or APIs. Likelihood medium: many frameworks validate types but not semantics."
+        "rationale": "Impact high: arguments reach code, SQL, or APIs. Likelihood medium: demonstrated in Semantic Kernel and across 11 LLM frameworks; no catalogued in-the-wild exploitation."
       },
-      "frameworks": ["OWASP-LLM05", "OWASP-LLM06", "OWASP-ASI02", "ATLAS-AML.T0053", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "demonstration", "title": "RCE Vulnerability in Semantic Kernel Search Plugin", "source": "MITRE ATLAS case study AML.CS0062", "url": "https://atlas.mitre.org/studies/AML.CS0062", "year": 2026},
+        {"kind": "demonstration", "title": "LLMSmith: RCE Vulnerabilities in LLM-Integrated Applications", "source": "MITRE ATLAS case study AML.CS0052", "url": "https://atlas.mitre.org/studies/AML.CS0052", "year": 2025}
+      ],
       "impact": "Injection payloads travel as tool arguments into SQL, shell, or privileged APIs.",
       "remediation": [
         "Validate every argument against a JSON Schema or protobuf contract.",
@@ -319,7 +351,8 @@
         "Fuzz tool endpoints with type-confused and nested payload corpora.",
         "Ensure schema failures never reach side-effecting code."
       ],
-      "codeExample": "const args = ToolSchema.parse(raw);\nif (args.path.includes('..')) throw new DenyError('path');"
+      "codeExample": "const args = ToolSchema.parse(raw);\nif (args.path.includes('..')) throw new DenyError('path');",
+      "frameworks": ["OWASP-LLM05", "OWASP-LLM06", "OWASP-ASI02", "ATLAS-AML.T0053", "NIST-MEASURE-2.7"]
     },
     {
       "id": "v-dynamic-exec",
@@ -327,13 +360,17 @@
       "title": "Dynamic Code Execution",
       "summary": "Agents evaluate model-generated code or shell snippets in-process without a sandbox boundary.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: host compromise. Likelihood high: code-interpreter tools are common and often run in-process."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: host compromise. Likelihood medium: researchers found 20 RCEs in deployed LLM apps and demonstrated execution through MathGPT and computer-use agents, all as demonstrations."
       },
-      "frameworks": ["OWASP-LLM05", "OWASP-LLM06", "OWASP-ASI05", "ATLAS-AML.T0105", "ATLAS-AML.T0053", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "demonstration", "title": "LLMSmith: RCE Vulnerabilities in LLM-Integrated Applications", "source": "MITRE ATLAS case study AML.CS0052", "url": "https://atlas.mitre.org/studies/AML.CS0052", "year": 2025},
+        {"kind": "demonstration", "title": "Achieving Code Execution in MathGPT via Prompt Injection", "source": "MITRE ATLAS case study AML.CS0016", "url": "https://atlas.mitre.org/studies/AML.CS0016", "year": 2023},
+        {"kind": "demonstration", "title": "Data Destruction via Indirect Prompt Injection Targeting Claude Computer-Use", "source": "MITRE ATLAS case study AML.CS0046", "url": "https://atlas.mitre.org/studies/AML.CS0046", "year": 2024}
+      ],
       "impact": "Arbitrary code execution yields host compromise, credential theft, and lateral movement.",
       "remediation": [
         "Run generated code only inside ephemeral containers with no secrets mounted.",
@@ -344,7 +381,8 @@
         "Attempt breakout payloads (env dump, socket open) inside the sandbox.",
         "Confirm host PID namespace and secrets are unreachable."
       ],
-      "codeExample": "await sandbox.run(code, { network: false, mounts: [], timeoutMs: 5000 });"
+      "codeExample": "await sandbox.run(code, { network: false, mounts: [], timeoutMs: 5000 });",
+      "frameworks": ["OWASP-LLM05", "OWASP-LLM06", "OWASP-ASI05", "ATLAS-AML.T0105", "ATLAS-AML.T0053", "NIST-MEASURE-2.7"]
     },
     {
       "id": "g-mcp-scope",
@@ -353,7 +391,6 @@
       "summary": "Least-privilege capability tokens and server-side allowlists constrain every MCP tool invocation.",
       "domain": "Autonomous Agent & MCP Security",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM06", "OWASP-ASI03", "ATLAS-AML.M0028", "ATLAS-AML.M0026", "NIST-MAP-4.2"],
       "impact": "Limits blast radius when an agent is steered into hostile tool use.",
       "remediation": [
         "Map each tool to a capability profile (read / write / admin).",
@@ -364,7 +401,8 @@
         "CI gate fails if a tool requests scopes outside its profile.",
         "Runtime denies cross-profile invocations with auditable events."
       ],
-      "codeExample": "assertScopes(session.token, tool.profile);\nawait invoke(tool, args);"
+      "codeExample": "assertScopes(session.token, tool.profile);\nawait invoke(tool, args);",
+      "frameworks": ["OWASP-LLM06", "OWASP-ASI03", "ATLAS-AML.M0028", "ATLAS-AML.M0026", "NIST-MAP-4.2"]
     },
     {
       "id": "g-dual-agent",
@@ -372,8 +410,7 @@
       "title": "Dual-Agent Approval Loop",
       "summary": "A separate verifier agent (or human) must approve high-risk tool plans before the executor proceeds.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM06", "OWASP-ASI01", "OWASP-ASI09", "ATLAS-AML.M0029", "NIST-MANAGE-2.4"],
+      "severity": "HIGH",
       "impact": "Blocks single-pass goal drift and tool hijacking from completing silently.",
       "remediation": [
         "Route write/admin tools through an approval queue with TTL.",
@@ -384,7 +421,8 @@
         "Simulate hijack plans and confirm executor stalls until approval.",
         "Measure false-approve rate on a labeled red-team set."
       ],
-      "codeExample": "const verdict = await verifier.review(plan);\nif (verdict !== 'ALLOW') return hold(plan);"
+      "codeExample": "const verdict = await verifier.review(plan);\nif (verdict !== 'ALLOW') return hold(plan);",
+      "frameworks": ["OWASP-LLM06", "OWASP-ASI01", "OWASP-ASI09", "ATLAS-AML.M0029", "NIST-MANAGE-2.4"]
     },
     {
       "id": "g-schema-validate",
@@ -392,8 +430,7 @@
       "title": "Deterministic Tool Schema Validation",
       "summary": "Hard schema gates reject malformed or semantically illegal tool arguments before any side effect.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM05", "OWASP-LLM06", "OWASP-ASI02", "ATLAS-AML.M0033", "NIST-MEASURE-2.7"],
+      "severity": "HIGH",
       "impact": "Removes entire classes of argument-injection failures at the boundary.",
       "remediation": [
         "Generate schemas from typed tool definitions; never hand-edit twice.",
@@ -404,7 +441,8 @@
         "Property-test schemas against adversarial JSON corpora.",
         "Ensure zero side effects on validation failure paths."
       ],
-      "codeExample": "const parsed = z.object({ id: z.uuid(), op: z.enum(OPS) }).parse(input);"
+      "codeExample": "const parsed = z.object({ id: z.uuid(), op: z.enum(OPS) }).parse(input);",
+      "frameworks": ["OWASP-LLM05", "OWASP-LLM06", "OWASP-ASI02", "ATLAS-AML.M0033", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-indirect-injection",
@@ -416,9 +454,14 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "HIGH",
-        "rationale": "Impact high: retrieved text can redirect tools and leak data. Likelihood high: anyone who can write a document or web page reaches the context."
+        "rationale": "Impact high: retrieved text redirects tools and leaks data. Likelihood high: crafted links and documents are used in the wild to manipulate assistants (2026 incident) and need no access beyond publishing content."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-ASI01", "ATLAS-AML.T0051.001", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "incident", "title": "AI Recommendation Poisoning via Crafted AI Assistant Links", "source": "MITRE ATLAS case study AML.CS0072", "url": "https://atlas.mitre.org/studies/AML.CS0072", "year": 2026},
+        {"kind": "demonstration", "title": "EchoLeak: Zero-Click Prompt Injection Targeting M365 Copilot for Data Exfiltration", "source": "MITRE ATLAS case study AML.CS0059", "url": "https://atlas.mitre.org/studies/AML.CS0059", "year": 2025},
+        {"kind": "demonstration", "title": "Data Exfiltration from Slack AI via Indirect Prompt Injection", "source": "MITRE ATLAS case study AML.CS0035", "url": "https://atlas.mitre.org/studies/AML.CS0035", "year": 2024},
+        {"kind": "research", "title": "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection", "source": "arXiv 2302.12173", "url": "https://arxiv.org/abs/2302.12173", "year": 2023}
+      ],
       "impact": "Retrieved content becomes an untrusted instruction channel that can exfiltrate data or redirect agent tools.",
       "remediation": [
         "Treat all retrieved text as untrusted data, never as system instructions.",
@@ -429,7 +472,8 @@
         "Plant hidden instruction payloads in PDF/HTML fixtures and confirm quarantine.",
         "Assert tool-calling models never receive raw retrieved blobs as system prompts."
       ],
-      "codeExample": "const safe = sanitizeRetrieved(chunks); // data channel only\nanswer = llm.chat({ system: POLICY, data: safe });"
+      "codeExample": "const safe = sanitizeRetrieved(chunks); // data channel only\nanswer = llm.chat({ system: POLICY, data: safe });",
+      "frameworks": ["OWASP-LLM01", "OWASP-ASI01", "ATLAS-AML.T0051.001", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-vector-poison",
@@ -441,9 +485,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: answers are steered at scale. Likelihood medium: requires write access to a source the index ingests."
+        "rationale": "Impact high: answers are steered at scale. Likelihood medium: demonstrated in research and against M365 Copilot via email ingestion; requires write access to an indexed source."
       },
-      "frameworks": ["OWASP-LLM08", "OWASP-LLM04", "ATLAS-AML.T0070", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "research", "title": "PoisonedRAG: Knowledge Corruption Attacks to Retrieval-Augmented Generation of Large Language Models", "source": "arXiv 2402.07867", "url": "https://arxiv.org/abs/2402.07867", "year": 2024},
+        {"kind": "demonstration", "title": "Financial Transaction Hijacking with M365 Copilot as an Insider", "source": "MITRE ATLAS case study AML.CS0026", "url": "https://atlas.mitre.org/studies/AML.CS0026", "year": 2024}
+      ],
       "impact": "Downstream answers and agent decisions are steered by poisoned neighbors in embedding space.",
       "remediation": [
         "Sign and version every indexed document; reject unsigned upserts.",
@@ -453,7 +500,8 @@
       "verification": [
         "Attempt unauthorized upserts without signing keys.",
         "Monitor recall drift on a golden query set after each reindex."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM08", "OWASP-LLM04", "ATLAS-AML.T0070", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-doc-exfil",
@@ -461,13 +509,16 @@
       "title": "Unauthorized Document Exfiltration",
       "summary": "RAG answers or agent tools leak restricted documents to users who lack ACL entitlement.",
       "domain": "RAG & Knowledge Retrieval Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: regulated or confidential data leaves the boundary. Likelihood high: any authenticated user can ask."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: confidential data leaves the boundary. Likelihood medium: zero-click exfiltration was demonstrated against M365 Copilot and Slack AI, but not catalogued as an in-the-wild incident."
       },
-      "frameworks": ["OWASP-LLM02", "OWASP-LLM08", "ATLAS-AML.T0057", "ATLAS-AML.T0085.000", "NIST-MEASURE-2.10"],
+      "evidence": [
+        {"kind": "demonstration", "title": "EchoLeak: Zero-Click Prompt Injection Targeting M365 Copilot for Data Exfiltration", "source": "MITRE ATLAS case study AML.CS0059", "url": "https://atlas.mitre.org/studies/AML.CS0059", "year": 2025},
+        {"kind": "demonstration", "title": "Data Exfiltration from Slack AI via Indirect Prompt Injection", "source": "MITRE ATLAS case study AML.CS0035", "url": "https://atlas.mitre.org/studies/AML.CS0035", "year": 2024}
+      ],
       "impact": "Confidential IP, PII, or regulated records leave the trust boundary through natural-language answers.",
       "remediation": [
         "Enforce document-level ACLs at retrieval time, not only at UI login.",
@@ -477,7 +528,8 @@
       "verification": [
         "Cross-tenant retrieval tests must return empty hit sets.",
         "PII canaries in indexed docs must not appear in unauthorized answers."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM08", "ATLAS-AML.T0057", "ATLAS-AML.T0085.000", "NIST-MEASURE-2.10"]
     },
     {
       "id": "v-no-sanitize",
@@ -489,9 +541,12 @@
       "risk": {
         "impact": "MEDIUM",
         "likelihood": "HIGH",
-        "rationale": "Impact medium: enables injection but does not by itself grant privileges. Likelihood high: raw chunk concatenation is the default pattern."
+        "rationale": "Impact medium: enables injection but grants no privileges by itself. Likelihood high: unsanitized retrieval is what in-the-wild assistant manipulation exploits."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM08", "OWASP-ASI01", "ATLAS-AML.T0051.001", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "incident", "title": "AI Recommendation Poisoning via Crafted AI Assistant Links", "source": "MITRE ATLAS case study AML.CS0072", "url": "https://atlas.mitre.org/studies/AML.CS0072", "year": 2026},
+        {"kind": "incident", "title": "Malware Prototype with Embedded Prompt Injection", "source": "MITRE ATLAS case study AML.CS0043", "url": "https://atlas.mitre.org/studies/AML.CS0043", "year": 2025}
+      ],
       "impact": "Untrusted document content is interpreted as higher-privilege instructions.",
       "remediation": [
         "Normalize encodings and strip HTML/script before chunking.",
@@ -502,7 +557,8 @@
         "Corpus of injection fixtures must be neutralized or quarantined.",
         "Unit tests assert delimiter integrity around every chunk."
       ],
-      "codeExample": "chunks = chunks.map(c => `<DATA>\\n${stripControls(c)}\\n</DATA>`);"
+      "codeExample": "chunks = chunks.map(c => `<DATA>\\n${stripControls(c)}\\n</DATA>`);",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM08", "OWASP-ASI01", "ATLAS-AML.T0051.001", "NIST-MEASURE-2.7"]
     },
     {
       "id": "v-overpriv-index",
@@ -510,13 +566,15 @@
       "title": "Over-Privileged Retrieval Indexing",
       "summary": "A shared vector index mixes clearance levels, so any authenticated user can retrieve neighbors from restricted corpora.",
       "domain": "RAG & Knowledge Retrieval Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: cross-tenant leakage. Likelihood high: single shared indexes are common in early deployments."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: cross-tenant leakage. Likelihood medium: Slack AI surfaced data across channel boundaries in a public demonstration."
       },
-      "frameworks": ["OWASP-LLM08", "OWASP-LLM02", "ATLAS-AML.T0085.000", "ATLAS-AML.T0082", "NIST-MEASURE-2.10"],
+      "evidence": [
+        {"kind": "demonstration", "title": "Data Exfiltration from Slack AI via Indirect Prompt Injection", "source": "MITRE ATLAS case study AML.CS0035", "url": "https://atlas.mitre.org/studies/AML.CS0035", "year": 2024}
+      ],
       "impact": "Authorization is deferred to the chat UI while the retrieval plane already leaked candidates.",
       "remediation": [
         "Partition indexes by tenant and clearance.",
@@ -526,7 +584,8 @@
       "verification": [
         "Negative ACL tests across every index partition.",
         "Secrets scanners fail the build if credentials appear in chunk text."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM08", "OWASP-LLM02", "ATLAS-AML.T0085.000", "ATLAS-AML.T0082", "NIST-MEASURE-2.10"]
     },
     {
       "id": "v-missing-acl",
@@ -538,9 +597,8 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: access cannot be enforced downstream. Likelihood medium: many sources already carry ACLs that are simply dropped."
+        "rationale": "Impact high: access cannot be enforced downstream. Likelihood medium: many sources carry ACLs that pipelines drop, but exploitation is rarely reported separately."
       },
-      "frameworks": ["OWASP-LLM02", "OWASP-LLM08", "ATLAS-AML.T0057", "NIST-MEASURE-2.10"],
       "impact": "Access decisions cannot be evaluated consistently across ingest, retrieve, and answer stages.",
       "remediation": [
         "Require ACL metadata at ingest; reject documents without owners.",
@@ -551,7 +609,8 @@
         "Ingest pipeline rejects ACL-less fixtures.",
         "Citation renderer drops links the caller cannot open."
       ],
-      "codeExample": "if (!doc.acl?.owners?.length) throw new IngestError('acl-required');"
+      "codeExample": "if (!doc.acl?.owners?.length) throw new IngestError('acl-required');",
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM08", "ATLAS-AML.T0057", "NIST-MEASURE-2.10"]
     },
     {
       "id": "g-preingest",
@@ -560,7 +619,6 @@
       "summary": "Documents are scanned for injection markers, malware, and policy violations before embeddings are written.",
       "domain": "RAG & Knowledge Retrieval Security",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM04", "OWASP-LLM08", "ATLAS-AML.M0030", "ATLAS-AML.M0007", "NIST-MEASURE-2.7"],
       "impact": "Stops poisoned or instruction-laden content from entering the retrieval corpus.",
       "remediation": [
         "Run static detectors for instruction phrases and hidden text layers.",
@@ -571,7 +629,8 @@
         "Known-bad fixtures never reach the production index.",
         "Quarantine SLAs and reviewer audit trails are intact."
       ],
-      "codeExample": "const report = await scan(doc);\nif (report.risk >= 'HIGH') return quarantine(doc, report);"
+      "codeExample": "const report = await scan(doc);\nif (report.risk >= 'HIGH') return quarantine(doc, report);",
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM04", "OWASP-LLM08", "ATLAS-AML.M0030", "ATLAS-AML.M0007", "NIST-MEASURE-2.7"]
     },
     {
       "id": "g-doc-acl",
@@ -579,8 +638,7 @@
       "title": "Document-Level Access Enforcement",
       "summary": "Retrieval and citation paths enforce per-document ACLs tied to the authenticated principal.",
       "domain": "RAG & Knowledge Retrieval Security",
-      "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM02", "OWASP-LLM08", "ATLAS-AML.M0019", "NIST-MEASURE-2.10"],
+      "severity": "HIGH",
       "impact": "Prevents unauthorized document exfiltration through RAG answers.",
       "remediation": [
         "Filter search hits with `canRead(user, doc)` before LLM context assembly.",
@@ -591,7 +649,8 @@
         "Cross-user retrieval suites return zero unauthorized hits.",
         "Denied events appear in SIEM with doc id and principal."
       ],
-      "codeExample": "hits = hits.filter(h => acl.canRead(user, h.docId));"
+      "codeExample": "hits = hits.filter(h => acl.canRead(user, h.docId));",
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM08", "ATLAS-AML.M0019", "NIST-MEASURE-2.10"]
     },
     {
       "id": "g-output-filter",
@@ -600,7 +659,6 @@
       "summary": "Post-generation filters redact PII, secrets, and out-of-policy content before the response is delivered.",
       "domain": "RAG & Knowledge Retrieval Security",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM02", "OWASP-LLM05", "ATLAS-AML.M0020", "NIST-MEASURE-2.10"],
       "impact": "Provides a last line of defense when retrieval or generation still surfaces sensitive spans.",
       "remediation": [
         "Run deterministic PII/secret detectors on every completion.",
@@ -611,7 +669,8 @@
         "Canary SSNs and API keys never leave the filter unmasked.",
         "Redaction metrics alert on sudden spikes."
       ],
-      "codeExample": "return redact(completion, { pii: true, secrets: true });"
+      "codeExample": "return redact(completion, { pii: true, secrets: true });",
+      "frameworks": ["OWASP-LLM02", "OWASP-LLM05", "ATLAS-AML.M0020", "NIST-MEASURE-2.10"]
     },
     {
       "id": "t-data-poison",
@@ -623,9 +682,14 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: backdoors survive into production and evade evals. Likelihood medium: requires influence over a training or fine-tune source."
+        "rationale": "Impact high: backdoors survive into production and evade evals. Likelihood medium: practical at web scale per research, and Tay was poisoned in production, but it requires influence over a training source."
       },
-      "frameworks": ["OWASP-LLM04", "ATLAS-AML.T0020", "ATLAS-AML.T0018", "NIST-MEASURE-2.7", "NIST-MANAGE-3.2"],
+      "evidence": [
+        {"kind": "incident", "title": "Tay Poisoning", "source": "MITRE ATLAS case study AML.CS0009", "url": "https://atlas.mitre.org/studies/AML.CS0009", "year": 2016},
+        {"kind": "research", "title": "Poisoning Web-Scale Training Datasets is Practical", "source": "arXiv 2302.10149", "url": "https://arxiv.org/abs/2302.10149", "year": 2023},
+        {"kind": "research", "title": "Poisoning Language Models During Instruction Tuning", "source": "arXiv 2305.00944", "url": "https://arxiv.org/abs/2305.00944", "year": 2023},
+        {"kind": "research", "title": "Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training", "source": "arXiv 2401.05566", "url": "https://arxiv.org/abs/2401.05566", "year": 2024}
+      ],
       "impact": "A trigger phrase silently flips model behavior in production, bypassing safety tuning and evading standard evals.",
       "remediation": [
         "Track provenance for every dataset shard and fine-tune contribution.",
@@ -635,7 +699,8 @@
       "verification": [
         "Train a canary model on a planted-trigger fixture and confirm detectors flag it.",
         "Compare refusal and toxicity rates against the previous release on a frozen suite."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM04", "ATLAS-AML.T0020", "ATLAS-AML.T0018", "NIST-MEASURE-2.7", "NIST-MANAGE-3.2"]
     },
     {
       "id": "t-malicious-artifact",
@@ -647,9 +712,13 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "HIGH",
-        "rationale": "Impact high: code execution on training or serving hosts. Likelihood high: malicious pickles on public model hubs are repeatedly reported."
+        "rationale": "Impact high: code execution on training or serving hosts. Likelihood high: malicious models on Hugging Face and a compromised PyTorch dependency are documented incidents, and anyone can publish."
       },
-      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0010", "ATLAS-AML.T0011.000", "NIST-GOVERN-6.1", "NIST-MANAGE-3.2"],
+      "evidence": [
+        {"kind": "incident", "title": "Malicious Models on Hugging Face", "source": "MITRE ATLAS case study AML.CS0031", "url": "https://atlas.mitre.org/studies/AML.CS0031", "year": 2025},
+        {"kind": "incident", "title": "Compromised PyTorch Dependency Chain", "source": "MITRE ATLAS case study AML.CS0015", "url": "https://atlas.mitre.org/studies/AML.CS0015", "year": 2022},
+        {"kind": "demonstration", "title": "Model Namespace Reuse Supply Chain Attack", "source": "MITRE ATLAS case study AML.CS0065", "url": "https://atlas.mitre.org/studies/AML.CS0065", "year": 2025}
+      ],
       "impact": "Loading the model executes attacker code on training clusters or inference hosts with access to data and credentials.",
       "remediation": [
         "Load only tensor-only formats (safetensors, GGUF) from untrusted sources.",
@@ -660,7 +729,8 @@
         "Attempt to load a pickle with an os.system payload and expect a hard failure.",
         "Registry rejects artifacts whose digest differs from the signed manifest."
       ],
-      "codeExample": "model = load_file('model.safetensors')  # never torch.load(untrusted)"
+      "codeExample": "model = load_file('model.safetensors')  # never torch.load(untrusted)",
+      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0010", "ATLAS-AML.T0011.000", "NIST-GOVERN-6.1", "NIST-MANAGE-3.2"]
     },
     {
       "id": "t-model-extraction",
@@ -670,11 +740,14 @@
       "domain": "Model Supply Chain & Training Integrity",
       "severity": "HIGH",
       "risk": {
-        "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: loss of model IP and a surrogate for further attacks. Likelihood medium: needs sustained, high-volume API access."
+        "impact": "MEDIUM",
+        "likelihood": "HIGH",
+        "rationale": "Impact medium for most deployers, high for model owners: loss of model IP. Likelihood high: a 2026 distillation campaign used about 24,000 accounts against a production model."
       },
-      "frameworks": ["OWASP-LLM10", "ATLAS-AML.T0024.002", "ATLAS-AML.T0040", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "incident", "title": "Model Distillation Campaigns Targeting Anthropic Claude", "source": "MITRE ATLAS case study AML.CS0056", "url": "https://atlas.mitre.org/studies/AML.CS0056", "year": 2026},
+        {"kind": "research", "title": "Stealing Part of a Production Language Model", "source": "arXiv 2403.06634", "url": "https://arxiv.org/abs/2403.06634", "year": 2024}
+      ],
       "impact": "Loss of proprietary model IP and a white-box surrogate that accelerates adversarial attacks.",
       "remediation": [
         "Enforce per-key query quotas and anomaly detection on query distribution.",
@@ -684,7 +757,8 @@
       "verification": [
         "Replay a synthetic extraction workload and confirm throttling triggers.",
         "Verify logprob and embedding endpoints require elevated scopes."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM10", "ATLAS-AML.T0024.002", "ATLAS-AML.T0040", "NIST-MEASURE-2.7"]
     },
     {
       "id": "v-unsafe-serialization",
@@ -696,9 +770,11 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "HIGH",
-        "rationale": "Impact high: loading becomes remote code execution. Likelihood high: pickle-based loaders remain the default in many pipelines."
+        "rationale": "Impact high: loading becomes remote code execution. Likelihood high: malicious pickled models with reverse shells were found on Hugging Face (2025 incident)."
       },
-      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0011.000", "NIST-MAP-4.1"],
+      "evidence": [
+        {"kind": "incident", "title": "Malicious Models on Hugging Face", "source": "MITRE ATLAS case study AML.CS0031", "url": "https://atlas.mitre.org/studies/AML.CS0031", "year": 2025}
+      ],
       "impact": "Model loading becomes a remote code execution primitive.",
       "remediation": [
         "Ban torch.load / pickle.load on untrusted input via lint rules.",
@@ -709,7 +785,8 @@
         "Static analysis fails CI on banned loader calls.",
         "Sandbox conversion jobs have no network or secret mounts."
       ],
-      "codeExample": "torch.load(path, weights_only=True)"
+      "codeExample": "torch.load(path, weights_only=True)",
+      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0011.000", "NIST-MAP-4.1"]
     },
     {
       "id": "v-no-provenance",
@@ -721,9 +798,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: compromised components cannot be traced. Likelihood medium: exploiting it still requires a poisoned upstream artifact."
+        "rationale": "Impact high: compromised components cannot be traced. Likelihood medium: namespace reuse and organization impersonation on model hubs are demonstrated."
       },
-      "frameworks": ["OWASP-LLM03", "OWASP-LLM04", "OWASP-ASI04", "ATLAS-AML.T0010", "NIST-MAP-4.1", "NIST-GOVERN-6.1"],
+      "evidence": [
+        {"kind": "demonstration", "title": "Model Namespace Reuse Supply Chain Attack", "source": "MITRE ATLAS case study AML.CS0065", "url": "https://atlas.mitre.org/studies/AML.CS0065", "year": 2025},
+        {"kind": "demonstration", "title": "Organization Confusion on Hugging Face", "source": "MITRE ATLAS case study AML.CS0027", "url": "https://atlas.mitre.org/studies/AML.CS0027", "year": 2023}
+      ],
       "impact": "Teams cannot tell which upstream component introduced a backdoor or license violation.",
       "remediation": [
         "Maintain an AIBOM listing every dataset, model, and adapter with digests.",
@@ -733,7 +813,8 @@
       "verification": [
         "Every deployed model resolves to a complete AIBOM entry.",
         "Builds fail when an artifact lacks a matching signature."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM03", "OWASP-LLM04", "OWASP-ASI04", "ATLAS-AML.T0010", "NIST-MAP-4.1", "NIST-GOVERN-6.1"]
     },
     {
       "id": "v-open-inference",
@@ -745,9 +826,12 @@
       "risk": {
         "impact": "MEDIUM",
         "likelihood": "HIGH",
-        "rationale": "Impact medium: enables extraction and cost abuse rather than direct compromise. Likelihood high: unthrottled endpoints are easy to find and use."
+        "rationale": "Impact medium: enables extraction and cost abuse rather than direct compromise. Likelihood high: exposed, unauthenticated AI infrastructure was hijacked in the ShadowRay incident."
       },
-      "frameworks": ["OWASP-LLM10", "ATLAS-AML.T0040", "ATLAS-AML.T0034", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "incident", "title": "ShadowRay: Hijacking Exposed Ray Clusters", "source": "MITRE ATLAS case study AML.CS0023", "url": "https://atlas.mitre.org/studies/AML.CS0023", "year": 2023},
+        {"kind": "incident", "title": "Model Distillation Campaigns Targeting Anthropic Claude", "source": "MITRE ATLAS case study AML.CS0056", "url": "https://atlas.mitre.org/studies/AML.CS0056", "year": 2026}
+      ],
       "impact": "Enables extraction, membership inference, and cost harvesting at scale.",
       "remediation": [
         "Rate-limit by key, IP, and organization with burst controls.",
@@ -757,7 +841,8 @@
       "verification": [
         "Anonymous callers receive 401 on every inference route.",
         "Quota exhaustion returns 429 before backend saturation."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM10", "ATLAS-AML.T0040", "ATLAS-AML.T0034", "NIST-MEASURE-2.7"]
     },
     {
       "id": "g-model-signing",
@@ -766,7 +851,6 @@
       "summary": "Only signed, hash-pinned artifacts with a recorded bill of materials can be promoted to training or serving.",
       "domain": "Model Supply Chain & Training Integrity",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.M0013", "ATLAS-AML.M0014", "ATLAS-AML.M0023", "NIST-GOVERN-6.1", "NIST-MANAGE-3.1"],
       "impact": "Breaks the supply-chain path from a public hub to production inference.",
       "remediation": [
         "Sign artifacts at build time (e.g. Sigstore) and verify at load.",
@@ -777,7 +861,8 @@
         "Tampered weights fail verification in the serving bootstrap.",
         "AIBOM diff is attached to every model release."
       ],
-      "codeExample": "verifySignature(artifact, trustRoot);\nassert(artifact.digest === manifest.digest);"
+      "codeExample": "verifySignature(artifact, trustRoot);\nassert(artifact.digest === manifest.digest);",
+      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.M0013", "ATLAS-AML.M0014", "ATLAS-AML.M0023", "NIST-GOVERN-6.1", "NIST-MANAGE-3.1"]
     },
     {
       "id": "g-safe-loading",
@@ -786,7 +871,6 @@
       "summary": "Loaders accept only tensor-only formats and run first-time conversions inside an isolated sandbox.",
       "domain": "Model Supply Chain & Training Integrity",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM03", "ATLAS-AML.M0016", "ATLAS-AML.M0014", "NIST-MANAGE-3.2"],
       "impact": "Removes deserialization RCE as a class from model pipelines.",
       "remediation": [
         "Allowlist file extensions at the registry boundary.",
@@ -796,7 +880,8 @@
       "verification": [
         "Known-malicious pickle fixtures are rejected at upload.",
         "Serving images contain no pickle-capable loader paths."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM03", "ATLAS-AML.M0016", "ATLAS-AML.M0014", "NIST-MANAGE-3.2"]
     },
     {
       "id": "g-data-provenance",
@@ -805,7 +890,6 @@
       "summary": "Training data is traced to source, filtered for anomalies, and screened for trigger patterns before each run.",
       "domain": "Model Supply Chain & Training Integrity",
       "severity": "HIGH",
-      "frameworks": ["OWASP-LLM04", "ATLAS-AML.M0007", "ATLAS-AML.M0025", "NIST-MAP-4.1"],
       "impact": "Reduces the chance that a backdoor survives into a released checkpoint.",
       "remediation": [
         "Hash and log every shard with its origin and license.",
@@ -815,7 +899,8 @@
       "verification": [
         "Planted poison fixtures are flagged before training starts.",
         "Release checklist links the provenance report for each dataset."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM04", "ATLAS-AML.M0007", "ATLAS-AML.M0025", "NIST-MAP-4.1"]
     },
     {
       "id": "g-query-throttle",
@@ -824,7 +909,6 @@
       "summary": "Per-tenant quotas, scoped access to sensitive outputs, and watermarking deter extraction and support attribution.",
       "domain": "Model Supply Chain & Training Integrity",
       "severity": "HIGH",
-      "frameworks": ["OWASP-LLM10", "ATLAS-AML.M0004", "NIST-MEASURE-2.7"],
       "impact": "Raises the cost of model theft and makes distilled copies traceable.",
       "remediation": [
         "Token-bucket limits per key and per organization.",
@@ -835,7 +919,8 @@
         "Extraction simulations hit quota before reaching useful fidelity.",
         "Watermark detector identifies outputs from a sampled corpus."
       ],
-      "codeExample": "if (!bucket.take(key, tokens)) return res.status(429).end();"
+      "codeExample": "if (!bucket.take(key, tokens)) return res.status(429).end();",
+      "frameworks": ["OWASP-LLM10", "ATLAS-AML.M0004", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-system-prompt-leak",
@@ -843,13 +928,15 @@
       "title": "System Prompt Extraction",
       "summary": "Users coax the model into revealing hidden instructions, embedded credentials, or business logic.",
       "domain": "LLM Application & Output Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "MEDIUM",
-        "likelihood": "HIGH",
-        "rationale": "Impact medium: harmful mainly when prompts hold secrets or logic. Likelihood high: extraction prompts are widely shared and cheap to try."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact medium: harmful mainly when prompts hold secrets or logic. Likelihood medium: research shows system prompts can be extracted reliably, but damaging leaks are rarely documented."
       },
-      "frameworks": ["OWASP-LLM07", "ATLAS-AML.T0056", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "research", "title": "Effective Prompt Extraction from Language Models", "source": "arXiv 2307.06865", "url": "https://arxiv.org/abs/2307.06865", "year": 2023}
+      ],
       "impact": "Leaked prompts reveal guardrail logic, internal endpoints, and sometimes live secrets.",
       "remediation": [
         "Assume the system prompt is public; keep secrets and authz logic out of it.",
@@ -859,7 +946,8 @@
       "verification": [
         "Run a prompt-extraction corpus and confirm no secrets appear.",
         "Canary strings in the system prompt trigger alerts if emitted."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM07", "ATLAS-AML.T0056", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-jailbreak",
@@ -871,9 +959,12 @@
       "risk": {
         "impact": "MEDIUM",
         "likelihood": "HIGH",
-        "rationale": "Impact medium: harmful output under the product's brand, usually without system compromise. Likelihood high: new bypasses appear continuously."
+        "rationale": "Impact medium: harmful output under the product's brand, usually without system compromise. Likelihood high: Storm-2139 built jailbreak tooling to bypass Azure OpenAI guardrails (2024 incident)."
       },
-      "frameworks": ["OWASP-LLM01", "ATLAS-AML.T0054", "NIST-MEASURE-2.6"],
+      "evidence": [
+        {"kind": "incident", "title": "Storm-2139 Azure OpenAI Guardrail Bypass", "source": "MITRE ATLAS case study AML.CS0057", "url": "https://atlas.mitre.org/studies/AML.CS0057", "year": 2024},
+        {"kind": "research", "title": "Universal and Transferable Adversarial Attacks on Aligned Language Models", "source": "arXiv 2307.15043", "url": "https://arxiv.org/abs/2307.15043", "year": 2023}
+      ],
       "impact": "The application produces harmful, defamatory, or policy-violating content under its own brand.",
       "remediation": [
         "Layer input and output classifiers independent of the base model.",
@@ -883,7 +974,8 @@
       "verification": [
         "Track attack success rate per release on a frozen jailbreak suite.",
         "Classifier failures are logged with full transcripts for review."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM01", "ATLAS-AML.T0054", "NIST-MEASURE-2.6"]
     },
     {
       "id": "t-output-exfil",
@@ -891,13 +983,18 @@
       "title": "Output-Rendered Data Exfiltration",
       "summary": "Injected instructions make the model emit markdown images, links, or HTML that leak context to attacker URLs when rendered.",
       "domain": "LLM Application & Output Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: zero-click data theft. Likelihood high: markdown image rendering is enabled in many chat UIs."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: zero-click data theft. Likelihood medium: demonstrated against ChatGPT, Bard, M365 Copilot, and Lenovo's chatbot; vendors patched the reported paths."
       },
-      "frameworks": ["OWASP-LLM05", "OWASP-LLM02", "ATLAS-AML.T0077", "ATLAS-AML.T0057", "NIST-MEASURE-2.10"],
+      "evidence": [
+        {"kind": "demonstration", "title": "ChatGPT Conversation Exfiltration", "source": "MITRE ATLAS case study AML.CS0021", "url": "https://atlas.mitre.org/studies/AML.CS0021", "year": 2023},
+        {"kind": "demonstration", "title": "Google Bard Conversation Exfiltration", "source": "MITRE ATLAS case study AML.CS0029", "url": "https://atlas.mitre.org/studies/AML.CS0029", "year": 2023},
+        {"kind": "demonstration", "title": "EchoLeak: Zero-Click Prompt Injection Targeting M365 Copilot for Data Exfiltration", "source": "MITRE ATLAS case study AML.CS0059", "url": "https://atlas.mitre.org/studies/AML.CS0059", "year": 2025},
+        {"kind": "demonstration", "title": "Cross-Site Scripting via Prompt Manipulation in Lenovo AI Chatbot", "source": "MITRE ATLAS case study AML.CS0060", "url": "https://atlas.mitre.org/studies/AML.CS0060", "year": 2025}
+      ],
       "impact": "Chat history, documents, or tokens are sent to an attacker server with zero user clicks.",
       "remediation": [
         "Never auto-load remote images or iframes from model output.",
@@ -907,7 +1004,8 @@
       "verification": [
         "Plant an image-exfil payload and confirm no outbound request occurs.",
         "CSP violation reports stay at zero in production."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM05", "OWASP-LLM02", "ATLAS-AML.T0077", "ATLAS-AML.T0057", "NIST-MEASURE-2.10"]
     },
     {
       "id": "v-secrets-in-prompt",
@@ -915,13 +1013,12 @@
       "title": "Secrets & Policy in System Prompt",
       "summary": "API keys, internal URLs, or access rules are embedded directly in prompts the model can repeat.",
       "domain": "LLM Application & Output Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: live credentials exposed. Likelihood medium: requires both a secret in the prompt and a successful extraction."
+        "likelihood": "LOW",
+        "rationale": "Impact high: live credentials exposed. Likelihood low: requires both a secret in the prompt and a successful extraction; few public cases."
       },
-      "frameworks": ["OWASP-LLM07", "OWASP-LLM02", "ATLAS-AML.T0056", "ATLAS-AML.T0083", "NIST-MAP-4.2"],
       "impact": "One successful extraction exposes credentials and reveals how to bypass controls.",
       "remediation": [
         "Move secrets to server-side tool handlers.",
@@ -931,7 +1028,8 @@
       "verification": [
         "Secret scanners run on prompt template directories.",
         "Prompt templates contain no hostnames outside an allowlist."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM07", "OWASP-LLM02", "ATLAS-AML.T0056", "ATLAS-AML.T0083", "NIST-MAP-4.2"]
     },
     {
       "id": "v-unsafe-render",
@@ -939,13 +1037,16 @@
       "title": "Unsanitized Output Rendering",
       "summary": "Frontends render model output as raw HTML or markdown with remote resources enabled.",
       "domain": "LLM Application & Output Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: XSS and exfiltration. Likelihood high: markdown renderers load remote images by default."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: XSS and exfiltration. Likelihood medium: a stored-XSS cookie theft path was demonstrated in Lenovo's support chatbot."
       },
-      "frameworks": ["OWASP-LLM05", "ATLAS-AML.T0077", "NIST-MEASURE-2.7"],
+      "evidence": [
+        {"kind": "demonstration", "title": "Cross-Site Scripting via Prompt Manipulation in Lenovo AI Chatbot", "source": "MITRE ATLAS case study AML.CS0060", "url": "https://atlas.mitre.org/studies/AML.CS0060", "year": 2025},
+        {"kind": "demonstration", "title": "ChatGPT Conversation Exfiltration", "source": "MITRE ATLAS case study AML.CS0021", "url": "https://atlas.mitre.org/studies/AML.CS0021", "year": 2023}
+      ],
       "impact": "XSS, CSRF, and zero-click exfiltration through the chat UI.",
       "remediation": [
         "Render with a sanitizer that strips scripts, event handlers, and remote images.",
@@ -956,7 +1057,8 @@
         "XSS payload corpus produces no script execution.",
         "Browser tests confirm img-src blocks non-allowlisted hosts."
       ],
-      "codeExample": "html = DOMPurify.sanitize(marked(output), { FORBID_TAGS: ['img', 'iframe'] });"
+      "codeExample": "html = DOMPurify.sanitize(marked(output), { FORBID_TAGS: ['img', 'iframe'] });",
+      "frameworks": ["OWASP-LLM05", "ATLAS-AML.T0077", "NIST-MEASURE-2.7"]
     },
     {
       "id": "v-single-layer-safety",
@@ -968,9 +1070,11 @@
       "risk": {
         "impact": "MEDIUM",
         "likelihood": "MEDIUM",
-        "rationale": "Impact medium: widens exposure to jailbreaks. Likelihood medium: base models resist many, but not all, known attacks."
+        "rationale": "Impact medium: widens exposure to jailbreaks. Likelihood medium: guardrail bypass tooling exists, but layered products resist much of it."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM09", "ATLAS-AML.T0054", "NIST-MEASURE-2.6"],
+      "evidence": [
+        {"kind": "incident", "title": "Storm-2139 Azure OpenAI Guardrail Bypass", "source": "MITRE ATLAS case study AML.CS0057", "url": "https://atlas.mitre.org/studies/AML.CS0057", "year": 2024}
+      ],
       "impact": "Any jailbreak that beats the base model reaches users unfiltered.",
       "remediation": [
         "Add independent moderation on both input and output.",
@@ -980,7 +1084,8 @@
       "verification": [
         "Disabling the classifier service blocks responses rather than passing them.",
         "Policy suite covers app-specific harms, not only generic ones."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM09", "ATLAS-AML.T0054", "NIST-MEASURE-2.6"]
     },
     {
       "id": "g-output-encoding",
@@ -988,8 +1093,7 @@
       "title": "Output Encoding & Strict CSP",
       "summary": "Model output is sanitized and rendered under a Content-Security-Policy that forbids remote resource loads.",
       "domain": "LLM Application & Output Security",
-      "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM05", "ATLAS-AML.M0020", "NIST-MEASURE-2.7"],
+      "severity": "HIGH",
       "impact": "Neutralizes markdown-image and HTML exfiltration channels regardless of injection success.",
       "remediation": [
         "Sanitize output server-side and again at render.",
@@ -1000,7 +1104,8 @@
         "CSP headers present on every chat route.",
         "Exfil fixtures produce CSP reports, not network hits."
       ],
-      "codeExample": "Content-Security-Policy: default-src 'self'; img-src 'self' data:; connect-src 'self'"
+      "codeExample": "Content-Security-Policy: default-src 'self'; img-src 'self' data:; connect-src 'self'",
+      "frameworks": ["OWASP-LLM05", "ATLAS-AML.M0020", "NIST-MEASURE-2.7"]
     },
     {
       "id": "g-prompt-hygiene",
@@ -1008,8 +1113,7 @@
       "title": "Prompt Hygiene & Canary Detection",
       "summary": "System prompts carry no secrets, include canary tokens, and outputs are scanned for prompt echoes.",
       "domain": "LLM Application & Output Security",
-      "severity": "HIGH",
-      "frameworks": ["OWASP-LLM07", "ATLAS-AML.M0020", "NIST-MEASURE-2.4"],
+      "severity": "MEDIUM",
       "impact": "Turns prompt leakage into a detectable, low-impact event.",
       "remediation": [
         "Insert a unique canary string per deployment.",
@@ -1020,7 +1124,8 @@
         "Canary appearance raises a SIEM alert within one minute.",
         "Overlap detector blocks verbatim prompt dumps."
       ],
-      "codeExample": "if (completion.includes(CANARY) || overlap(completion, SYSTEM) > 0.6) return block();"
+      "codeExample": "if (completion.includes(CANARY) || overlap(completion, SYSTEM) > 0.6) return block();",
+      "frameworks": ["OWASP-LLM07", "ATLAS-AML.M0020", "NIST-MEASURE-2.4"]
     },
     {
       "id": "g-io-classifiers",
@@ -1029,7 +1134,6 @@
       "summary": "Independent classifiers screen prompts and completions against application and vendor policy.",
       "domain": "LLM Application & Output Security",
       "severity": "HIGH",
-      "frameworks": ["OWASP-LLM01", "ATLAS-AML.M0020", "NIST-MEASURE-2.6"],
       "impact": "Adds a second, differently trained layer that jailbreaks must beat.",
       "remediation": [
         "Run input screening before the main model call.",
@@ -1039,7 +1143,8 @@
       "verification": [
         "False-negative rate measured on a labeled jailbreak set each release.",
         "Classifier latency stays within the streaming budget."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM01", "ATLAS-AML.M0020", "NIST-MEASURE-2.6"]
     },
     {
       "id": "t-memory-poison",
@@ -1051,9 +1156,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "HIGH",
-        "rationale": "Impact high: a single injection persists across sessions. Likelihood high: assistants with memory write from untrusted context by default."
+        "rationale": "Impact high: one injection persists across sessions. Likelihood high: Microsoft documented widespread in-the-wild memory manipulation through crafted assistant links (2026)."
       },
-      "frameworks": ["OWASP-LLM01", "OWASP-LLM04", "OWASP-ASI06", "ATLAS-AML.T0080.000", "NIST-MEASURE-2.4"],
+      "evidence": [
+        {"kind": "incident", "title": "AI Recommendation Poisoning via Crafted AI Assistant Links", "source": "MITRE ATLAS case study AML.CS0072", "url": "https://atlas.mitre.org/studies/AML.CS0072", "year": 2026},
+        {"kind": "demonstration", "title": "Hacking ChatGPT's Memories with Prompt Injection", "source": "MITRE ATLAS case study AML.CS0040", "url": "https://atlas.mitre.org/studies/AML.CS0040", "year": 2024}
+      ],
       "impact": "A one-time injection becomes a durable backdoor affecting every later conversation.",
       "remediation": [
         "Tag every memory write with source, trust level, and author.",
@@ -1063,7 +1171,8 @@
       "verification": [
         "Inject a memory via a retrieved document and confirm it is quarantined.",
         "Expired memories are absent from new sessions."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM01", "OWASP-LLM04", "OWASP-ASI06", "ATLAS-AML.T0080.000", "NIST-MEASURE-2.4"]
     },
     {
       "id": "t-tool-poisoning",
@@ -1075,9 +1184,13 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "HIGH",
-        "rationale": "Impact high: hidden directives run with tool privileges. Likelihood high: MCP servers are installed from unvetted sources, with public incidents documented in ATLAS case studies."
+        "rationale": "Impact high: hidden directives run with tool privileges. Likelihood high: a poisoned Postmark MCP server exfiltrated users' email in a 2025 incident, and anyone can publish a server."
       },
-      "frameworks": ["OWASP-LLM03", "OWASP-LLM01", "OWASP-ASI04", "OWASP-ASI02", "ATLAS-AML.T0110", "ATLAS-AML.T0010", "NIST-GOVERN-6.1"],
+      "evidence": [
+        {"kind": "incident", "title": "Poisoned Postmark MCP Server Email Exfiltration", "source": "MITRE ATLAS case study AML.CS0053", "url": "https://atlas.mitre.org/studies/AML.CS0053", "year": 2025},
+        {"kind": "demonstration", "title": "Data Exfiltration via Remote Poisoned MCP Tool", "source": "MITRE ATLAS case study AML.CS0054", "url": "https://atlas.mitre.org/studies/AML.CS0054", "year": 2025},
+        {"kind": "demonstration", "title": "Supply Chain Compromise via Poisoned ClawdBot Skill", "source": "MITRE ATLAS case study AML.CS0049", "url": "https://atlas.mitre.org/studies/AML.CS0049", "year": 2026}
+      ],
       "impact": "Agents follow hidden directives from tool metadata, leaking data or shadowing trusted tools.",
       "remediation": [
         "Pin tool manifests by hash and re-approve on any change.",
@@ -1087,7 +1200,8 @@
       "verification": [
         "Mutate a tool description post-approval and confirm the client refuses it.",
         "Scan manifests for instruction-like text before connecting."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM03", "OWASP-LLM01", "OWASP-ASI04", "OWASP-ASI02", "ATLAS-AML.T0110", "ATLAS-AML.T0010", "NIST-GOVERN-6.1"]
     },
     {
       "id": "t-agent-impersonation",
@@ -1095,13 +1209,12 @@
       "title": "Inter-Agent Impersonation",
       "summary": "A rogue agent spoofs a trusted peer in a multi-agent system to issue tasks or receive delegated data.",
       "domain": "Multi-Agent & Memory Trust",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: delegated credentials and data reach the attacker. Likelihood medium: requires network position or a foothold among agents."
+        "likelihood": "LOW",
+        "rationale": "Impact high: delegated credentials and data reach the attacker. Likelihood low: no public cases yet; requires network position among agents."
       },
-      "frameworks": ["OWASP-LLM06", "OWASP-ASI07", "OWASP-ASI03", "ATLAS-AML.T0073", "ATLAS-AML.T0118", "NIST-MEASURE-2.7"],
       "impact": "Delegated credentials and sensitive results flow to an attacker-controlled agent.",
       "remediation": [
         "Authenticate agents with workload identity, not self-declared names.",
@@ -1111,7 +1224,8 @@
       "verification": [
         "Unsigned or mis-signed task messages are rejected.",
         "Delegated tokens fail outside their intended audience."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM06", "OWASP-ASI07", "OWASP-ASI03", "ATLAS-AML.T0073", "ATLAS-AML.T0118", "NIST-MEASURE-2.7"]
     },
     {
       "id": "v-unprovenanced-memory",
@@ -1119,13 +1233,16 @@
       "title": "Memory Writes Without Provenance",
       "summary": "Agents persist memories from any context source with no record of where the content came from.",
       "domain": "Multi-Agent & Memory Trust",
-      "severity": "HIGH",
+      "severity": "CRITICAL",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: untrusted content becomes trusted state. Likelihood medium: depends on the memory being written from external content."
+        "likelihood": "HIGH",
+        "rationale": "Impact high: untrusted content becomes trusted state. Likelihood high: the in-the-wild memory manipulation campaign relied on assistants storing memories from untrusted links."
       },
-      "frameworks": ["OWASP-LLM04", "OWASP-ASI06", "ATLAS-AML.T0080.000", "NIST-MEASURE-2.4"],
+      "evidence": [
+        {"kind": "incident", "title": "AI Recommendation Poisoning via Crafted AI Assistant Links", "source": "MITRE ATLAS case study AML.CS0072", "url": "https://atlas.mitre.org/studies/AML.CS0072", "year": 2026},
+        {"kind": "demonstration", "title": "Hacking ChatGPT's Memories with Prompt Injection", "source": "MITRE ATLAS case study AML.CS0040", "url": "https://atlas.mitre.org/studies/AML.CS0040", "year": 2024}
+      ],
       "impact": "Untrusted retrieved content is promoted to trusted long-term state.",
       "remediation": [
         "Store provenance metadata alongside each memory entry.",
@@ -1136,7 +1253,8 @@
         "Memory store schema rejects entries missing a source field.",
         "Recall excludes entries flagged as untrusted."
       ],
-      "codeExample": "memory.write({ text, source: ctx.origin, trust: ctx.trust, ttl: '30d' });"
+      "codeExample": "memory.write({ text, source: ctx.origin, trust: ctx.trust, ttl: '30d' });",
+      "frameworks": ["OWASP-LLM04", "OWASP-ASI06", "ATLAS-AML.T0080.000", "NIST-MEASURE-2.4"]
     },
     {
       "id": "v-mutable-tool-manifest",
@@ -1144,13 +1262,15 @@
       "title": "Mutable Tool Manifests",
       "summary": "MCP clients trust tool metadata fetched at runtime and do not detect changes after initial approval.",
       "domain": "Multi-Agent & Memory Trust",
-      "severity": "HIGH",
+      "severity": "CRITICAL",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: approved tools can turn malicious. Likelihood medium: requires a compromised or malicious server operator."
+        "likelihood": "HIGH",
+        "rationale": "Impact high: approved tools turn malicious. Likelihood high: the Postmark MCP server shipped clean versions, then added a hidden BCC in an update (2025 incident)."
       },
-      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0110", "NIST-MANAGE-3.1"],
+      "evidence": [
+        {"kind": "incident", "title": "Poisoned Postmark MCP Server Email Exfiltration", "source": "MITRE ATLAS case study AML.CS0053", "url": "https://atlas.mitre.org/studies/AML.CS0053", "year": 2025}
+      ],
       "impact": "Enables rug-pull attacks where a benign tool turns malicious after users approve it.",
       "remediation": [
         "Hash tool definitions at approval and compare on every session.",
@@ -1160,7 +1280,8 @@
       "verification": [
         "Manifest drift test triggers re-approval UI.",
         "Client logs record manifest hashes per session."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.T0110", "NIST-MANAGE-3.1"]
     },
     {
       "id": "v-unauth-agent-channel",
@@ -1168,13 +1289,12 @@
       "title": "Unauthenticated Agent Channels",
       "summary": "Agent-to-agent messages travel over channels without mutual authentication or message integrity.",
       "domain": "Multi-Agent & Memory Trust",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: task injection and data theft. Likelihood medium: requires access to the channel."
+        "likelihood": "LOW",
+        "rationale": "Impact high: task injection and data theft. Likelihood low: requires access to the channel; no public cases yet."
       },
-      "frameworks": ["OWASP-LLM06", "OWASP-ASI07", "ATLAS-AML.T0073", "NIST-MEASURE-2.7"],
       "impact": "Any process on the network can inject tasks or read delegated results.",
       "remediation": [
         "Use mTLS or signed JWTs between agents.",
@@ -1184,7 +1304,8 @@
       "verification": [
         "Replayed messages are rejected after the nonce window.",
         "Network tests confirm plaintext channels are closed."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM06", "OWASP-ASI07", "ATLAS-AML.T0073", "NIST-MEASURE-2.7"]
     },
     {
       "id": "g-memory-provenance",
@@ -1193,7 +1314,6 @@
       "summary": "Long-term memory stores track source and trust, expire entries, and expose them for user review.",
       "domain": "Multi-Agent & Memory Trust",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM04", "OWASP-ASI06", "ATLAS-AML.M0031", "NIST-MEASURE-2.4"],
       "impact": "Limits how long and how widely a poisoned memory can influence behavior.",
       "remediation": [
         "Separate memory tiers for user-stated, agent-inferred, and retrieved facts.",
@@ -1203,7 +1323,8 @@
       "verification": [
         "Poison fixtures in retrieved content never reach the trusted tier.",
         "TTL sweeps run on schedule and are audited."
-      ]
+      ],
+      "frameworks": ["OWASP-LLM04", "OWASP-ASI06", "ATLAS-AML.M0031", "NIST-MEASURE-2.4"]
     },
     {
       "id": "g-tool-pinning",
@@ -1212,7 +1333,6 @@
       "summary": "Tool definitions are hash-pinned at approval, scanned for hidden instructions, and re-approved on change.",
       "domain": "Multi-Agent & Memory Trust",
       "severity": "CRITICAL",
-      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.M0014", "ATLAS-AML.M0013", "NIST-GOVERN-6.1", "NIST-MANAGE-3.1"],
       "impact": "Stops tool poisoning and post-approval rug pulls before tools reach the model.",
       "remediation": [
         "Compute a canonical hash of name, description, and schema.",
@@ -1223,7 +1343,8 @@
         "Changed manifests never load without fresh consent.",
         "Scanner flags fixtures containing hidden directives."
       ],
-      "codeExample": "if (sha256(canonical(tool)) !== pinned[tool.id]) return requireReapproval(tool);"
+      "codeExample": "if (sha256(canonical(tool)) !== pinned[tool.id]) return requireReapproval(tool);",
+      "frameworks": ["OWASP-LLM03", "OWASP-ASI04", "ATLAS-AML.M0014", "ATLAS-AML.M0013", "NIST-GOVERN-6.1", "NIST-MANAGE-3.1"]
     },
     {
       "id": "g-agent-identity",
@@ -1231,8 +1352,7 @@
       "title": "Agent Workload Identity & Signed Tasks",
       "summary": "Each agent holds a verifiable workload identity, and every delegated task is signed and audience-scoped.",
       "domain": "Multi-Agent & Memory Trust",
-      "severity": "HIGH",
-      "frameworks": ["OWASP-LLM06", "OWASP-ASI07", "OWASP-ASI03", "ATLAS-AML.M0032", "ATLAS-AML.M0026", "NIST-MEASURE-2.7"],
+      "severity": "MEDIUM",
       "impact": "Makes impersonation and task injection between agents cryptographically detectable.",
       "remediation": [
         "Issue SPIFFE-style identities per agent workload.",
@@ -1243,7 +1363,8 @@
         "Forged identities fail mutual TLS handshakes.",
         "Delegation audit reconstructs the full chain for any task."
       ],
-      "codeExample": "verifyEnvelope(msg, { audience: SELF_ID, maxAgeSec: 60 });"
+      "codeExample": "verifyEnvelope(msg, { audience: SELF_ID, maxAgeSec: 60 });",
+      "frameworks": ["OWASP-LLM06", "OWASP-ASI07", "OWASP-ASI03", "ATLAS-AML.M0032", "ATLAS-AML.M0026", "NIST-MEASURE-2.7"]
     },
     {
       "id": "t-hallucination-reliance",
@@ -1253,10 +1374,13 @@
       "domain": "LLM Application & Output Security",
       "severity": "HIGH",
       "risk": {
-        "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: courts and regulators have held operators liable for chatbot statements. Likelihood medium: harm requires someone to act on an unverified answer in a consequential setting."
+        "impact": "MEDIUM",
+        "likelihood": "HIGH",
+        "rationale": "Impact medium: usually financial or reputational, higher in medical or legal settings. Likelihood high: a tribunal held Air Canada liable for its chatbot's invented policy, with no attacker involved."
       },
+      "evidence": [
+        {"kind": "incident", "title": "Moffatt v. Air Canada, 2024 BCCRT 149: airline held liable for its chatbot's wrong bereavement-fare answer", "source": "BC Civil Resolution Tribunal decision (PDF)", "url": "https://decisions.civilresolutionbc.ca/crt/crtd/en/525448/1/document.do", "year": 2024}
+      ],
       "impact": "Wrong decisions with legal, financial, or safety consequences; the operator can be held liable for what its chatbot said.",
       "remediation": [
         "Ground answers in retrieved, trusted sources and show the citations.",
@@ -1279,8 +1403,11 @@
       "risk": {
         "impact": "MEDIUM",
         "likelihood": "HIGH",
-        "rationale": "Impact medium: errors are harmful only when relied on. Likelihood high: every model hallucinates, and many apps answer without grounding."
+        "rationale": "Impact medium: errors are harmful only when relied on. Likelihood high: ungrounded answers caused the Air Canada liability ruling."
       },
+      "evidence": [
+        {"kind": "incident", "title": "Moffatt v. Air Canada, 2024 BCCRT 149: airline held liable for its chatbot's wrong bereavement-fare answer", "source": "BC Civil Resolution Tribunal decision (PDF)", "url": "https://decisions.civilresolutionbc.ca/crt/crtd/en/525448/1/document.do", "year": 2024}
+      ],
       "impact": "Fabricated facts and citations reach users with nothing to catch them.",
       "remediation": [
         "Answer from retrieved documents and require a citation for each factual claim.",
@@ -1304,7 +1431,7 @@
       "risk": {
         "impact": "MEDIUM",
         "likelihood": "MEDIUM",
-        "rationale": "Impact medium: amplifies other errors rather than causing them. Likelihood medium: many products now label AI output, but few add friction before action."
+        "rationale": "Impact medium: amplifies other errors rather than causing them. Likelihood medium: many products label AI output, few add friction before action."
       },
       "impact": "Users skip verification because the interface signals that none is needed.",
       "remediation": [
@@ -1362,12 +1489,15 @@
       "title": "Denial of Wallet & Resource Exhaustion",
       "summary": "Floods of requests, oversized inputs, or deliberately expensive prompts drive up inference cost or take the service down.",
       "domain": "LLM Application & Output Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "MEDIUM",
-        "likelihood": "HIGH",
-        "rationale": "Impact medium: financial and availability loss, usually recoverable. Likelihood high: pay-per-token endpoints are cheap to abuse and easy to find."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact medium: financial and availability loss, usually recoverable. Likelihood medium: cost harvesting is documented with stolen credentials (LLMjacking); public-endpoint floods are less documented."
       },
+      "evidence": [
+        {"kind": "incident", "title": "LLM Jacking", "source": "MITRE ATLAS case study AML.CS0030", "url": "https://atlas.mitre.org/studies/AML.CS0030", "year": 2024}
+      ],
       "impact": "Unplanned cloud bills, degraded service for legitimate users, or a full outage.",
       "remediation": [
         "Cap input size, output tokens, and execution time per request.",
@@ -1386,12 +1516,15 @@
       "title": "No Per-Request Resource Limits",
       "summary": "Requests can use unlimited context, output tokens, tool calls, or wall-clock time, and spend is not tracked per caller.",
       "domain": "LLM Application & Output Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "MEDIUM",
-        "likelihood": "HIGH",
-        "rationale": "Impact medium: enables cost and availability attacks. Likelihood high: default SDK settings rarely set budgets."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact medium: enables cost and availability attacks. Likelihood medium: SDK defaults rarely set budgets, but abuse needs access to the endpoint."
       },
+      "evidence": [
+        {"kind": "incident", "title": "LLM Jacking", "source": "MITRE ATLAS case study AML.CS0030", "url": "https://atlas.mitre.org/studies/AML.CS0030", "year": 2024}
+      ],
       "impact": "A single caller can consume capacity and budget meant for everyone.",
       "remediation": [
         "Set max input tokens, max output tokens, and timeouts on every call.",
@@ -1411,7 +1544,7 @@
       "title": "Resource Budgets, Timeouts & Graceful Degradation",
       "summary": "Every request, session, and tenant runs within explicit token, time, and spend budgets, with a degraded mode under load.",
       "domain": "LLM Application & Output Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "impact": "Bounds the cost and blast radius of abuse and of runaway legitimate use.",
       "remediation": [
         "Define budgets per request, session, user, and tenant.",
@@ -1434,8 +1567,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: code execution in development and CI. Likelihood medium: OWASP lists it as an attack scenario and attackers have registered hallucinated names, but it requires installing an unvetted suggestion."
+        "rationale": "Impact high: code execution in development and CI. Likelihood medium: package hallucination is measured in research and demonstrated, but installing the suggestion is still required."
       },
+      "evidence": [
+        {"kind": "demonstration", "title": "ChatGPT Package Hallucination", "source": "MITRE ATLAS case study AML.CS0022", "url": "https://atlas.mitre.org/studies/AML.CS0022", "year": 2024},
+        {"kind": "research", "title": "We Have a Package for You! A Comprehensive Analysis of Package Hallucinations by Code Generating LLMs", "source": "arXiv 2406.10279", "url": "https://arxiv.org/abs/2406.10279", "year": 2024}
+      ],
       "impact": "Malicious code runs on developer machines and in CI with access to source and secrets.",
       "remediation": [
         "Install only from an allowlist or internal mirror.",
@@ -1458,8 +1595,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: vulnerabilities and malware reach production. Likelihood medium: most teams review code, but agent-authored changes and quick installs often skip it."
+        "rationale": "Impact high: vulnerabilities and malware reach production. Likelihood medium: backdoored rules files for coding assistants were demonstrated; most teams still review code."
       },
+      "evidence": [
+        {"kind": "demonstration", "title": "Rules File Backdoor: Supply Chain Attack on AI Coding Assistants", "source": "MITRE ATLAS case study AML.CS0041", "url": "https://atlas.mitre.org/studies/AML.CS0041", "year": 2025},
+        {"kind": "research", "title": "We Have a Package for You! A Comprehensive Analysis of Package Hallucinations by Code Generating LLMs", "source": "arXiv 2406.10279", "url": "https://arxiv.org/abs/2406.10279", "year": 2024}
+      ],
       "impact": "Insecure patterns and malicious dependencies enter the codebase through trusted tooling.",
       "remediation": [
         "Require code review for AI-generated changes like any other change.",
@@ -1502,8 +1643,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: regulated data disclosure. Likelihood medium: memorization is documented, but extracting specific records takes effort."
+        "rationale": "Impact high: regulated data disclosure from the weights. Likelihood medium: extraction from a production model is demonstrated in research."
       },
+      "evidence": [
+        {"kind": "research", "title": "Scalable Extraction of Training Data from (Production) Language Models", "source": "arXiv 2311.17035", "url": "https://arxiv.org/abs/2311.17035", "year": 2023},
+        {"kind": "research", "title": "Extracting Training Data from Large Language Models", "source": "arXiv 2012.07805", "url": "https://arxiv.org/abs/2012.07805", "year": 2020}
+      ],
       "impact": "Privacy breaches and secret exposure that cannot be fixed by access controls, because the data lives in the weights.",
       "remediation": [
         "Scrub PII and secrets from training and fine-tuning data.",
@@ -1522,12 +1667,15 @@
       "title": "Unscrubbed Fine-Tuning Data",
       "summary": "Support tickets, chat logs, or code used for fine-tuning still contain names, credentials, and confidential details.",
       "domain": "Model Supply Chain & Training Integrity",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: personal and secret data enters the weights. Likelihood medium: many teams scrub, but internal logs are often assumed safe."
+        "likelihood": "LOW",
+        "rationale": "Impact high: personal and secret data enters the weights. Likelihood low: extracting specific records from a fine-tuned model takes many targeted queries."
       },
+      "evidence": [
+        {"kind": "research", "title": "Extracting Training Data from Large Language Models", "source": "arXiv 2012.07805", "url": "https://arxiv.org/abs/2012.07805", "year": 2020}
+      ],
       "impact": "Sensitive records become part of the model and can resurface in any user's session.",
       "remediation": [
         "Run PII and secret detectors over every training shard.",
@@ -1569,8 +1717,11 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "LOW",
-        "rationale": "Impact high: source text can be recovered. Likelihood low: requires access to raw vectors, which are not usually exposed."
+        "rationale": "Impact high: source text can be recovered. Likelihood low: shown in research, and it requires access to raw vectors."
       },
+      "evidence": [
+        {"kind": "research", "title": "Text Embeddings Reveal (Almost) As Much As Text", "source": "arXiv 2310.06816", "url": "https://arxiv.org/abs/2310.06816", "year": 2023}
+      ],
       "impact": "Confidential document content is recovered from data that teams assumed was anonymized.",
       "remediation": [
         "Treat embeddings with the same classification as their source documents.",
@@ -1593,8 +1744,11 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "LOW",
-        "rationale": "Impact high: hidden copies of sensitive data. Likelihood low: exploiting it still needs access and an inversion model."
+        "rationale": "Impact high: hidden copies of sensitive data. Likelihood low: exploitation needs vector access plus an inversion model."
       },
+      "evidence": [
+        {"kind": "research", "title": "Text Embeddings Reveal (Almost) As Much As Text", "source": "arXiv 2310.06816", "url": "https://arxiv.org/abs/2310.06816", "year": 2023}
+      ],
       "impact": "Copies of sensitive content spread outside the controls applied to the original documents.",
       "remediation": [
         "Classify vector stores at the level of their most sensitive source.",
@@ -1632,12 +1786,18 @@
       "title": "Prompt-to-Code Execution in Agents",
       "summary": "Injected instructions make an agent write and run code, shell commands, or package installs on infrastructure it can reach.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "HIGH",
-        "rationale": "Impact high: host and credential compromise. Likelihood high: coding and ops agents run code by design, and injection paths are common."
+        "likelihood": "MEDIUM",
+        "rationale": "Impact high: host and credential compromise. Likelihood medium: shown against Cursor, Claude computer use, and OpenClaw, but catalogued only as demonstrations."
       },
+      "evidence": [
+        {"kind": "demonstration", "title": "Data Exfiltration via an MCP Server used by Cursor", "source": "MITRE ATLAS case study AML.CS0045", "url": "https://atlas.mitre.org/studies/AML.CS0045", "year": 2025},
+        {"kind": "demonstration", "title": "Data Destruction via Indirect Prompt Injection Targeting Claude Computer-Use", "source": "MITRE ATLAS case study AML.CS0046", "url": "https://atlas.mitre.org/studies/AML.CS0046", "year": 2024},
+        {"kind": "demonstration", "title": "OpenClaw Command & Control via Prompt Injection", "source": "MITRE ATLAS case study AML.CS0051", "url": "https://atlas.mitre.org/studies/AML.CS0051", "year": 2026},
+        {"kind": "demonstration", "title": "AI ClickFix: Hijacking Computer-Use Agents Using ClickFix", "source": "MITRE ATLAS case study AML.CS0055", "url": "https://atlas.mitre.org/studies/AML.CS0055", "year": 2025}
+      ],
       "impact": "Remote code execution through natural language, often with the agent's credentials and network access.",
       "remediation": [
         "Run generated code only in an isolated, ephemeral sandbox.",
@@ -1656,7 +1816,7 @@
       "title": "Hardened Execution Sandbox",
       "summary": "Agent-generated code runs in ephemeral, network-restricted containers with no secrets, resource limits, and approval for elevated actions.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "CRITICAL",
+      "severity": "HIGH",
       "impact": "Contains code execution so a successful injection cannot reach the host, secrets, or internal network.",
       "remediation": [
         "Use a fresh container or microVM per run; destroy it afterward.",
@@ -1676,12 +1836,15 @@
       "title": "Human Approval Manipulation",
       "summary": "A steered agent describes a harmful action in reassuring terms, or floods reviewers with requests, so a human approves it.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: defeats the main human control on agents. Likelihood medium: requires the agent to be steered and the reviewer to rely on its summary."
+        "likelihood": "LOW",
+        "rationale": "Impact high: defeats the main human control on agents. Likelihood low: discussed by OWASP (ASI09) but no public case of a manipulated approval is catalogued yet."
       },
+      "evidence": [
+        {"kind": "demonstration", "title": "Financial Transaction Hijacking with M365 Copilot as an Insider", "source": "MITRE ATLAS case study AML.CS0026", "url": "https://atlas.mitre.org/studies/AML.CS0026", "year": 2024}
+      ],
       "impact": "Human-in-the-loop controls approve the very actions they were meant to stop.",
       "remediation": [
         "Show approvers the actual action, not the agent's description of it.",
@@ -1700,11 +1863,11 @@
       "title": "Approvals Based on Agent-Written Summaries",
       "summary": "The approval screen shows the agent's own explanation of what it will do instead of the exact tool, arguments, and effect.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "risk": {
         "impact": "HIGH",
-        "likelihood": "MEDIUM",
-        "rationale": "Impact high: approvals become rubber stamps. Likelihood medium: common in early agent products, less so where approvals show raw actions."
+        "likelihood": "LOW",
+        "rationale": "Impact high: approvals become rubber stamps. Likelihood low: a common design, but exploitation has not been publicly documented."
       },
       "impact": "Reviewers cannot see the action they are approving, so persuasion beats verification.",
       "remediation": [
@@ -1724,7 +1887,7 @@
       "title": "Verifiable Action Previews for Approvers",
       "summary": "Approval requests show system-generated previews of the exact action and its effect, with forced confirmation for sensitive actions.",
       "domain": "Autonomous Agent & MCP Security",
-      "severity": "HIGH",
+      "severity": "MEDIUM",
       "impact": "Makes human oversight meaningful: reviewers judge the action, not the agent's pitch.",
       "remediation": [
         "Generate previews (diffs, recipients, amounts) from the tool layer.",
@@ -1747,8 +1910,12 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: sustained misuse of agent privileges. Likelihood medium: needs a prior compromise, but ATLAS documents real cases of tampered agent code."
+        "rationale": "Impact high: sustained misuse of agent privileges. Likelihood medium: real incidents exist (tampered Amazon Q agent code, boundary-crossing evaluation agents) but each needed a prior foothold."
       },
+      "evidence": [
+        {"kind": "incident", "title": "Code to Deploy Destructive AI Agent Discovered in Amazon Q VS Code Extension", "source": "MITRE ATLAS case study AML.CS0047", "url": "https://atlas.mitre.org/studies/AML.CS0047", "year": 2025},
+        {"kind": "incident", "title": "Autonomous OpenAI Evaluation Agents Compromise Hugging Face Infrastructure", "source": "MITRE ATLAS case study AML.CS0068", "url": "https://atlas.mitre.org/studies/AML.CS0068", "year": 2026}
+      ],
       "impact": "Ongoing unauthorized actions that look like normal agent activity until someone notices.",
       "remediation": [
         "Monitor agent actions against declared scope in real time.",
@@ -1771,8 +1938,11 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: no containment once something goes wrong. Likelihood medium: many deployments log outputs but not intermediate steps."
+        "rationale": "Impact high: no containment once something goes wrong. Likelihood medium: the 2026 evaluation-agent incident ran for weeks before containment."
       },
+      "evidence": [
+        {"kind": "incident", "title": "Autonomous OpenAI Evaluation Agents Compromise Hugging Face Infrastructure", "source": "MITRE ATLAS case study AML.CS0068", "url": "https://atlas.mitre.org/studies/AML.CS0068", "year": 2026}
+      ],
       "impact": "Misbehaving agents run until a human happens to notice the damage.",
       "remediation": [
         "Log every plan, tool call, and result with agent identity.",
@@ -1815,8 +1985,11 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: system-wide failure from one fault. Likelihood medium: grows with the number of chained agents."
+        "rationale": "Impact high: a single fault becomes system-wide. Likelihood medium: a self-replicating prompt worm spread between GenAI systems in a research demonstration."
       },
+      "evidence": [
+        {"kind": "demonstration", "title": "Morris II Worm: RAG-Based Attack", "source": "MITRE ATLAS case study AML.CS0024", "url": "https://atlas.mitre.org/studies/AML.CS0024", "year": 2024}
+      ],
       "impact": "A single fault becomes a system-wide incident, with each agent faithfully acting on bad input.",
       "remediation": [
         "Validate inputs between agents as untrusted data.",
@@ -1839,8 +2012,11 @@
       "risk": {
         "impact": "HIGH",
         "likelihood": "MEDIUM",
-        "rationale": "Impact high: faults spread unchecked. Likelihood medium: common in prototypes, less so in hardened systems."
+        "rationale": "Impact high: faults spread unchecked. Likelihood medium: shown in worm research; common in prototypes."
       },
+      "evidence": [
+        {"kind": "demonstration", "title": "Morris II Worm: RAG-Based Attack", "source": "MITRE ATLAS case study AML.CS0024", "url": "https://atlas.mitre.org/studies/AML.CS0024", "year": 2024}
+      ],
       "impact": "There is no boundary where a fault can be stopped.",
       "remediation": [
         "Give each agent its own identity, credentials, and quotas.",

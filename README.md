@@ -2,7 +2,7 @@
 
 Interactive threat model for AI agents, LLM applications, and RAG systems. Start at an adversarial threat, trace it to the vulnerabilities it exploits, and land on concrete guardrails with remediation steps, verification tests, and code patterns. Every entry is mapped to OWASP, MITRE ATLAS, and NIST AI RMF references.
 
-**Live:** https://clarkngo.github.io/ai-sec-atlas/ · **Version:** 0.4.0 ([changelog](CHANGELOG.md)) · **License:** [MIT](LICENSE)
+**Live:** https://clarkngo.github.io/ai-sec-atlas/ · **Version:** 0.5.0 ([changelog](CHANGELOG.md)) · **License:** [MIT](LICENSE)
 
 > **Not MITRE ATLAS.** This is an independent project, not affiliated with or endorsed by MITRE. [MITRE ATLAS](https://atlas.mitre.org/) is MITRE's knowledge base of adversary tactics, techniques, and case studies against AI systems, written from the attacker's point of view. This project is written for defenders: it links each risk to the weakness it exploits and to the control that fixes it, plus tests that confirm the fix. It cites ATLAS IDs as references; it does not extend or replace ATLAS.
 
@@ -27,9 +27,16 @@ Severity follows the [OWASP Risk Rating Methodology](https://owasp.org/www-commu
 | **Medium** | Low | Medium | High |
 | **Low** | Low | Low | Medium |
 
-A guardrail is labeled with the highest severity among the risks it directly mitigates (shown as "FOR CRITICAL" on its card). Ratings are the author's assessment for a typical production deployment; re-score them for your own environment.
+Levels follow a written rubric (stored in `meta.severityMethod.rubric` and shown in the app):
 
-`npm run build` runs [`scripts/validate-data.mjs`](scripts/validate-data.mjs), which fails if any severity disagrees with its scores, any framework ID is missing from the reference list, or any edge points to an unknown node.
+| | High | Medium | Low |
+|---|---|---|---|
+| **Impact** | Code execution, credential compromise, regulated or confidential data exposure, irreversible actions, or system-wide failure | Limited or recoverable harm: cost, availability, reputation, or exposure confined to one session or user | Nuisance or degraded quality without a security consequence |
+| **Likelihood** | At least one documented real-world incident, with no attacker access beyond what ordinary users or content get | Public demonstration or peer-reviewed research, or real-world use that needed a foothold such as stolen credentials | No public cases yet, or privileged or insider access required |
+
+Each rating cites its **evidence**: MITRE ATLAS case studies (labeled Incident or Demonstration), arXiv papers, or court and tribunal decisions. A guardrail is labeled with the highest severity among the risks it directly mitigates (shown as "Fixes critical" on its card). Ratings assume a typical production deployment; re-score them for your own environment.
+
+`npm run build` runs [`scripts/validate-data.mjs`](scripts/validate-data.mjs), which fails if any severity disagrees with its scores, a High likelihood lacks a cited incident, a Medium- or High-likelihood threat has no evidence, any framework ID is missing from the reference list, or any edge points to an unknown node.
 
 ## Domains
 
@@ -53,7 +60,8 @@ Every item in the OWASP Top 10 for LLM Applications 2025 and the OWASP Top 10 fo
 ## Use the data
 
 - **Dataset:** [`public/data/seed-data.json`](public/data/seed-data.json), also served at https://clarkngo.github.io/ai-sec-atlas/data/seed-data.json. It contains `meta`, `sources`, `references`, `domains`, `nodes`, and `edges`; the TypeScript schema is in [`src/types.ts`](src/types.ts).
-- **Link to an entry:** use **Copy link** in any detail panel. Links keep the view and area (`#view=list&node=t-jailbreak`) or the path step (`#path=rag-chatbot&step=3`).
+- **Entry pages:** every entry has a plain page at `https://clarkngo.github.io/ai-sec-atlas/entry/<id>/` (index at [`/entry/`](https://clarkngo.github.io/ai-sec-atlas/entry/)), generated at build time by [`scripts/build-pages.mjs`](scripts/build-pages.mjs) together with `sitemap.xml`.
+- **Link to an entry:** use **Copy link** in any detail panel; it copies the entry page URL. In-app links keep the view and area (`#view=list&node=t-jailbreak`) or the path step (`#path=rag-chatbot&step=3`).
 - **Cite:** see [`CITATION.cff`](CITATION.cff), or use **Cite this repository** on GitHub.
 
 ## Contribute
