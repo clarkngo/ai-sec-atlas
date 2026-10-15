@@ -2,6 +2,13 @@
 
 Dataset and app versions follow [Semantic Versioning](https://semver.org/).
 
+## 0.5.0 — 2026-10-15
+
+- **Severity recalibrated against a written rubric.** Likelihood High now requires a documented real-world incident and no special attacker access; Medium means public demonstration or research, or real-world use that needed a foothold; Low means no public cases or privileged access. Impact levels are defined the same way. Risks moved from 13 Critical / 31 High / 4 Medium to 8 / 26 / 14. Ten ratings went down (e.g. Agent Tool Hijacking, Output-Rendered Data Exfiltration: Critical → High, as only demonstrations are documented) and two went up (Mutable Tool Manifests, Memory Writes Without Provenance: High → Critical, backed by the Postmark MCP and AI recommendation poisoning incidents).
+- **Evidence on 42 entries (80 citations):** MITRE ATLAS case studies labeled Incident or Demonstration from the 2026.09 data release, 12 arXiv papers (titles checked against the arXiv API), and the Moffatt v. Air Canada tribunal decision. Shown in the detail panel and on entry pages.
+- **The build enforces the rubric:** High likelihood without an incident, or a Medium/High-likelihood threat without evidence, fails validation.
+- **Static pages for every entry** at `/entry/<id>/`, an index at `/entry/`, and `sitemap.xml`, so content is readable by search engines, link previews, and readers without JavaScript. "Copy link" and checklist exports now point to these pages. Open Graph and canonical tags on all pages.
+
 ## 0.4.0 — 2026-10-07
 
 Coverage pass against the OWASP Top 10 for LLM Applications 2025 and the OWASP Top 10 for Agentic Applications 2026. Every item in both lists now has at least one threat and one guardrail, and every threat and vulnerability has at least one mitigation. 28 new entries (74 total):

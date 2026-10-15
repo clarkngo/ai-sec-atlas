@@ -81,6 +81,13 @@ function PathBar({ path }: { path: PathNav }) {
 
 const LEVEL_SHORT = { HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' } as const;
 
+const EVIDENCE_LABEL = { incident: 'Incident', demonstration: 'Demo', research: 'Research' } as const;
+const EVIDENCE_COLOR = {
+  incident: 'var(--atlas-critical)',
+  demonstration: 'var(--atlas-high)',
+  research: 'var(--atlas-medium)',
+} as const;
+
 const linkCls =
   'text-[var(--atlas-accent)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[var(--atlas-accent)]';
 
@@ -116,7 +123,8 @@ export function DetailPanel({ node, data, onClose, onSelect, path }: Props) {
   useEffect(() => setCopied('idle'), [node.id]);
 
   const copyLink = async () => {
-    const ok = await copyText(window.location.href);
+    // Share the static entry page: it has a readable preview in Slack, LinkedIn, and search results.
+    const ok = await copyText(`${window.location.origin}${import.meta.env.BASE_URL}entry/${node.id}/`);
     setCopied(ok ? 'ok' : 'fail');
     if (ok) play('success');
   };
@@ -268,6 +276,23 @@ export function DetailPanel({ node, data, onClose, onSelect, path }: Props) {
                   <span style={{ color: severityColor(node.severity) }}>{SEVERITY_LABEL[node.severity]}</span>
                 </p>
                 <p className="mt-1 leading-relaxed text-[var(--atlas-text)]/90">{node.risk.rationale}</p>
+                <details className="mt-1.5 text-[12px] text-[var(--atlas-muted)]">
+                  <summary className="cursor-pointer select-none hover:text-[var(--atlas-text)]">
+                    What these levels mean
+                  </summary>
+                  <dl className="mt-1.5 space-y-1.5">
+                    <div>
+                      <dt className="font-medium text-[var(--atlas-text)]/90">Impact {LEVEL_SHORT[node.risk.impact]}</dt>
+                      <dd>{method.rubric.impact[node.risk.impact]}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium text-[var(--atlas-text)]/90">
+                        Likelihood {LEVEL_SHORT[node.risk.likelihood]}
+                      </dt>
+                      <dd>{method.rubric.likelihood[node.risk.likelihood]}</dd>
+                    </div>
+                  </dl>
+                </details>
               </>
             ) : (
               <p className="leading-relaxed text-[var(--atlas-text)]/90">
@@ -288,6 +313,35 @@ export function DetailPanel({ node, data, onClose, onSelect, path }: Props) {
               </a>
             </p>
           </section>
+
+          {node.evidence && node.evidence.length > 0 && (
+            <section>
+              <h3 className="mb-2 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">
+                Evidence
+              </h3>
+              <ul className="space-y-2">
+                {node.evidence.map((e) => (
+                  <li key={e.url} className="text-[12px] leading-snug">
+                    <span
+                      className="mr-1.5 inline-block rounded border px-1 py-px font-mono text-[9px] tracking-wide uppercase"
+                      style={{
+                        color: EVIDENCE_COLOR[e.kind],
+                        borderColor: `${EVIDENCE_COLOR[e.kind]}66`,
+                      }}
+                    >
+                      {EVIDENCE_LABEL[e.kind]}
+                    </span>
+                    <a href={e.url} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                      {e.title}
+                    </a>
+                    <span className="block text-[11px] text-[var(--atlas-muted)]">
+                      {e.source} · {e.year}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section>
             <h3 className="mb-2 font-mono text-[10px] tracking-wider text-[var(--atlas-muted)] uppercase">

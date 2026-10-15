@@ -20,6 +20,11 @@ const MATRIX = {
 const RANK = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
 
 const errors = [];
+for (const axis of ['impact', 'likelihood']) {
+  for (const lvl of ['HIGH', 'MEDIUM', 'LOW']) {
+    if (!data.meta.severityMethod?.rubric?.[axis]?.[lvl]) errors.push(`meta.severityMethod.rubric.${axis}.${lvl} missing`);
+  }
+}
 const ids = new Set();
 const byId = new Map();
 const sourceIds = new Set(data.sources.map((s) => s.id));
@@ -38,6 +43,21 @@ for (const n of data.nodes) {
   for (const f of n.frameworks) {
     if (!data.references[f]) errors.push(`${n.id}: framework ${f} missing from references`);
   }
+  const evidence = n.evidence ?? [];
+  for (const e of evidence) {
+    if (!['incident', 'demonstration', 'research'].includes(e.kind)) errors.push(`${n.id}: bad evidence kind ${e.kind}`);
+    if (!/^https:\/\//.test(e.url) || !e.title || !e.source || !Number.isInteger(e.year)) {
+      errors.push(`${n.id}: evidence needs title, source, https url, and year`);
+    }
+  }
+  // Rubric: HIGH likelihood needs a real-world incident; MEDIUM/HIGH threats need some evidence.
+  if (n.risk?.likelihood === 'HIGH' && !evidence.some((e) => e.kind === 'incident')) {
+    errors.push(`${n.id}: likelihood HIGH requires at least one incident in evidence`);
+  }
+  if (n.type === 'threat' && n.risk && n.risk.likelihood !== 'LOW' && !evidence.length) {
+    errors.push(`${n.id}: threats rated MEDIUM or HIGH likelihood need evidence`);
+  }
+  if (n.type === 'guardrail' && evidence.length) errors.push(`${n.id}: guardrails do not carry evidence`);
   if (n.type === 'guardrail') {
     if (n.risk) errors.push(`${n.id}: guardrails take derived severity, not a risk score`);
   } else {

@@ -10,6 +10,15 @@ export type LayoutDirection = 'TB' | 'LR';
 
 export type SourceId = 'owasp-llm' | 'owasp-asi' | 'mitre-atlas' | 'nist-ai-rmf';
 
+/** A real-world incident, public demonstration, or research paper supporting a rating. */
+export interface Evidence {
+  kind: 'incident' | 'demonstration' | 'research';
+  title: string;
+  source: string;
+  url: string;
+  year: number;
+}
+
 /** OWASP Risk Rating inputs. Present on threats and vulnerabilities only. */
 export interface RiskScore {
   impact: RiskLevel;
@@ -29,6 +38,7 @@ export interface AtlasNode {
    */
   severity: Severity;
   risk?: RiskScore;
+  evidence?: Evidence[];
   impact: string;
   remediation: string[];
   verification?: string[];
@@ -64,7 +74,12 @@ export interface AtlasMeta {
   updated: string;
   license: string;
   repository: string;
-  severityMethod: { name: string; url: string; summary: string };
+  severityMethod: {
+    name: string;
+    url: string;
+    summary: string;
+    rubric: { impact: Record<RiskLevel, string>; likelihood: Record<RiskLevel, string> };
+  };
 }
 
 /** A curated walk through the atlas, e.g. "Hardening a RAG chatbot". */

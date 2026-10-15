@@ -1,7 +1,7 @@
 import type { AtlasData, AtlasNode } from '../types';
 
 function nodeUrl(id: string) {
-  return `${window.location.origin}${window.location.pathname}#node=${id}`;
+  return `${window.location.origin}${import.meta.env.BASE_URL}entry/${id}/`;
 }
 
 function guardrailItem(g: AtlasNode, data: AtlasData) {
